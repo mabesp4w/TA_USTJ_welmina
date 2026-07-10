@@ -6,14 +6,18 @@ import AdminHeader from "./AdminHeader";
 export default function AdminLayout({
     children,
     actions,
+    title,
 }: {
     children: React.ReactNode;
     actions?: React.ReactNode;
+    title?: string;
 }) {
     const { component } = usePage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const title = component?.replace(/^admin\//, '') || 'Dashboard';
+    if (!title) {
+        title = "Dashboard";
+    }
 
     const closeSidebar = () => setSidebarOpen(false);
 

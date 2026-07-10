@@ -39,6 +39,7 @@ export default function NotificationLayout({ children }: { children: React.React
 
     return (
         <AdminLayout
+            title="Notifikasi"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

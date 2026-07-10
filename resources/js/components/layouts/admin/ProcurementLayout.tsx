@@ -29,6 +29,7 @@ export default function ProcurementLayout({ children }: { children: React.ReactN
 
     return (
         <AdminLayout
+            title="Pengadaan Barang"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

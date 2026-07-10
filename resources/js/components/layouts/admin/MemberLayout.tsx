@@ -3,7 +3,7 @@ import { Plus, Search } from "lucide-react";
 import { router } from "@inertiajs/react";
 import AdminLayout from "./AdminLayout";
 
-export default function MemberLayout({ children }: { children: React.ReactNode }) {
+export default function MemberLayout({ children, title }: { children: React.ReactNode, title: string }) {
     const [search, setSearch] = useState("");
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -28,7 +28,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
     }, [search, navigate]);
 
     return (
-        <AdminLayout
+        <AdminLayout title="Data Member"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

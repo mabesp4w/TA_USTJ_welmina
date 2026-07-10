@@ -29,6 +29,7 @@ export default function GymEquipmentLayout({ children }: { children: React.React
 
     return (
         <AdminLayout
+            title="Peralatan Gym"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

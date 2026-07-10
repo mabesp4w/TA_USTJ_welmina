@@ -29,6 +29,7 @@ export default function GymFeeLayout({ children }: { children: React.ReactNode }
 
     return (
         <AdminLayout
+            title="Biaya Gym"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

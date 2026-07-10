@@ -29,6 +29,7 @@ export default function ActivityLogLayout({ children }: { children: React.ReactN
 
     return (
         <AdminLayout
+            title="Log Aktivitas"
             actions={
                 <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">
                     <Search size={16} className="opacity-70" />

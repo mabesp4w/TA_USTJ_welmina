@@ -14,6 +14,7 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
 
     return (
         <AdminLayout
+            title="Laporan"
             actions={
                 <>
                     <button

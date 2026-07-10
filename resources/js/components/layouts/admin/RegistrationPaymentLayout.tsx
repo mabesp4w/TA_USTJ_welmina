@@ -29,6 +29,7 @@ export default function RegistrationPaymentLayout({ children }: { children: Reac
 
     return (
         <AdminLayout
+            title="Pembayaran Pendaftaran"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

@@ -201,8 +201,8 @@ function BarangPage() {
                                                                 >
                                                                     {
                                                                         conditionLabel[
-                                                                            item
-                                                                                .itemCondition
+                                                                        item
+                                                                            .itemCondition
                                                                         ]
                                                                     }
                                                                 </span>
@@ -213,8 +213,8 @@ function BarangPage() {
                                                                 >
                                                                     {
                                                                         statusLabel[
-                                                                            item
-                                                                                .itemStatus
+                                                                        item
+                                                                            .itemStatus
                                                                         ]
                                                                     }
                                                                 </span>

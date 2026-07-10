@@ -243,8 +243,8 @@ function KeuanganPage() {
                                 </div>
                             </div>
 
-                            <div className="card mb-6 border border-base-300 shadow-sm">
-                                <div className="card-body p-4 md:p-5">
+                            <div className="card mb-6 border border-base-300 shadow-sm bg-base-100/70">
+                                <div className="card-body p-4 md:p-5 ">
                                     <h3 className="text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                         Ringkasan per Bulan
                                     </h3>
@@ -320,18 +320,18 @@ function KeuanganPage() {
                                                             const totalInc =
                                                                 (inc
                                                                     ? Number(
-                                                                          inc.total,
-                                                                      )
+                                                                        inc.total,
+                                                                    )
                                                                     : 0) +
                                                                 (mem
                                                                     ? Number(
-                                                                          mem.total,
-                                                                      )
+                                                                        mem.total,
+                                                                    )
                                                                     : 0);
                                                             const totalExp = exp
                                                                 ? Number(
-                                                                      exp.total,
-                                                                  )
+                                                                    exp.total,
+                                                                )
                                                                 : 0;
                                                             return (
                                                                 <tr key={m}>
@@ -382,7 +382,7 @@ function KeuanganPage() {
                                 </div>
                             </div>
 
-                            <div className="card border border-base-300 shadow-sm">
+                            <div className="card border border-base-300 shadow-sm bg-base-100/70">
                                 <div className="card-body p-4 md:p-5">
                                     <h3 className="text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                         Transaksi Terbaru
@@ -400,7 +400,7 @@ function KeuanganPage() {
                                             </thead>
                                             <tbody>
                                                 {recentTransactions.length ===
-                                                0 ? (
+                                                    0 ? (
                                                     <tr>
                                                         <td
                                                             colSpan={3}
@@ -419,7 +419,7 @@ function KeuanganPage() {
                                                                 <td>
                                                                     <span className="flex items-center gap-2">
                                                                         {t.type ===
-                                                                        'income' ? (
+                                                                            'income' ? (
                                                                             <TrendingUp
                                                                                 size={
                                                                                     12
@@ -443,7 +443,7 @@ function KeuanganPage() {
                                                                     className={`text-right font-semibold ${t.type === 'income' ? 'text-success' : 'text-error'}`}
                                                                 >
                                                                     {t.type ===
-                                                                    'income'
+                                                                        'income'
                                                                         ? '+'
                                                                         : '-'}
                                                                     Rp{' '}

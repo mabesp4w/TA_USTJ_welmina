@@ -33,8 +33,8 @@ export default function Welcome() {
             <Head title="Login" />
             <div className="min-h-screen">
                 <div className="hero min-h-screen px-4 py-8">
-                    <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 shadow-2xl rounded-3xl overflow-hidden border border-base-300">
-                        <div className="relative hidden lg:flex flex-col justify-between backdrop-blur-xs text-gray-300 p-10">
+                    <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 shadow-2xl rounded-3xl overflow-hidden">
+                        <div className="relative hidden lg:flex flex-col justify-between text-gray-300 p-10">
                             <div className="absolute inset-0 opacity-10">
                                 <div className="absolute top-10 left-10 w-24 h-24 rounded-full border border-primary-content"></div>
                                 <div className="absolute bottom-16 right-16 w-32 h-32 rounded-full border border-primary-content"></div>

@@ -29,6 +29,7 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
     return (
         <AdminLayout
+            title="Inventaris"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

@@ -29,6 +29,7 @@ export default function MaintenanceLogLayout({ children }: { children: React.Rea
 
     return (
         <AdminLayout
+            title="Perawatan Barang"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

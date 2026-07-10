@@ -226,7 +226,7 @@ function HarianPage() {
                                     <div className="stat-title">
                                         Member Baru
                                     </div>
-                                    <div className="stat-value text-lg text-secondary">
+                                    <div className="stat-value text-lg text-secondary-content">
                                         {stats.newMembers}
                                     </div>
                                     <div className="stat-desc">
@@ -235,8 +235,8 @@ function HarianPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                <div className="card border border-base-300 shadow-sm">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 ">
+                                <div className="card border border-base-300 shadow-sm bg-base-100/70">
                                     <div className="card-body p-4 md:p-5">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                             <TrendingUp
@@ -281,7 +281,7 @@ function HarianPage() {
                                                                             className={`badge badge-sm ${r.status === 'paid' ? 'badge-success' : 'badge-warning'}`}
                                                                         >
                                                                             {r.status ===
-                                                                            'paid'
+                                                                                'paid'
                                                                                 ? 'Lunas'
                                                                                 : 'Belum'}
                                                                         </span>
@@ -296,7 +296,7 @@ function HarianPage() {
                                     </div>
                                 </div>
 
-                                <div className="card border border-base-300 shadow-sm">
+                                <div className="card border border-base-300 shadow-sm bg-base-100/70">
                                     <div className="card-body p-4 md:p-5">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                             <TrendingUp
@@ -354,7 +354,7 @@ function HarianPage() {
                                     </div>
                                 </div>
 
-                                <div className="card border border-base-300 shadow-sm">
+                                <div className="card border border-base-300 shadow-sm bg-base-100/70">
                                     <div className="card-body p-4 md:p-5">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                             <ShoppingCart
@@ -415,7 +415,7 @@ function HarianPage() {
                                     </div>
                                 </div>
 
-                                <div className="card border border-base-300 shadow-sm">
+                                <div className="card border border-base-300 shadow-sm bg-base-100/70">
                                     <div className="card-body p-4 md:p-5">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                             <Wrench
@@ -473,7 +473,7 @@ function HarianPage() {
                                 </div>
                             </div>
 
-                            <div className="card mt-6 border border-base-300 shadow-sm">
+                            <div className="card mt-6 border border-base-300 shadow-sm bg-base-100/70">
                                 <div className="card-body p-4 md:p-5">
                                     <h3 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-base-content/70 uppercase">
                                         <Activity size={14} />
