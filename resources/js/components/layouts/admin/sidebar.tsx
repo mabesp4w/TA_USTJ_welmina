@@ -1,27 +1,51 @@
+import { useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { activityLog, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, supplier, user as userRoute } from '@/routes/admin';
-import { X } from "lucide-react";
 import {
+    dashboard as pengelolaDashboard,
+    gymEquipment as pengelolaGymEquipment,
+    inventory as pengelolaInventory,
+    maintenanceLogs as pengelolaMaintenanceLogs,
+    supplier as pengelolaSupplier,
+} from '@/routes/pengelola';
+import {
+    barang as pengelolaReportBarang,
+    keuangan as pengelolaReportKeuangan,
+    harian as pengelolaReportHarian,
+} from '@/routes/pengelola/report';
+import {
+    Bell,
     Building2,
+    CalendarDays,
+    ClipboardList,
+    CreditCard,
+    DollarSign,
+    Dumbbell,
+    FileText,
+    History,
     LayoutDashboard,
+    LogOut,
+    Package,
+    ShieldUser,
+    ShoppingCart,
     Users,
     UserPlus,
-    CreditCard,
-    Dumbbell,
-    Package,
-    ShoppingCart,
-    History,
-    Settings,
-    Bell,
-    FileText,
-    ShieldUser,
-    ClipboardList,
-    DollarSign,
-    CalendarDays,
     Wrench,
+    X,
 } from "lucide-react";
 
-const menuSections = [
+export type MenuItem = {
+    label: string;
+    icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+    href: string;
+};
+
+export type MenuSection = {
+    title: string;
+    items: MenuItem[];
+};
+
+export const adminMenuSections: MenuSection[] = [
     {
         title: "UTAMA",
         items: [
@@ -66,13 +90,57 @@ const menuSections = [
             { label: "Laporan", icon: FileText, href: report.url() },
             { label: "Notifikasi", icon: Bell, href: notification.url() },
             { label: "Pengguna", icon: ShieldUser, href: userRoute.url() },
-            { label: "Pengaturan", icon: Settings, href: '#' },
         ],
     },
 ];
 
-export default function SidebarFitnessCenter({ open, onClose }: { open?: boolean; onClose?: () => void }) {
+export const pengelolaMenuSections: MenuSection[] = [
+    {
+        title: "UTAMA",
+        items: [
+            { label: "Dashboard", icon: LayoutDashboard, href: pengelolaDashboard.url() },
+        ],
+    },
+    {
+        title: "IVENTARIS",
+        items: [
+            { label: "Data Inventaris", icon: Package, href: pengelolaInventory.url() },
+            { label: "Peralatan Gym", icon: Dumbbell, href: pengelolaGymEquipment.url() },
+            { label: "Perawatan Barang", icon: Wrench, href: pengelolaMaintenanceLogs.url() },
+            { label: "Pemasok", icon: Building2, href: pengelolaSupplier.url() },
+        ],
+    },
+    {
+        title: "CETAK LAPORAN",
+        items: [
+            { label: "Laporan Barang", icon: ClipboardList, href: pengelolaReportBarang.url() },
+            { label: "Laporan Keuangan", icon: DollarSign, href: pengelolaReportKeuangan.url() },
+            { label: "Laporan Harian", icon: CalendarDays, href: pengelolaReportHarian.url() },
+        ],
+    },
+];
+
+export default function SidebarFitnessCenter({
+    open,
+    onClose,
+    menuSections = adminMenuSections,
+    subtitle = "Sistem Inventaris",
+}: {
+    open?: boolean;
+    onClose?: () => void;
+    menuSections?: MenuSection[];
+    subtitle?: string;
+}) {
     const { url } = usePage();
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const activeLink = container.querySelector<HTMLAnchorElement>('a.bg-primary');
+        activeLink?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, [url]);
 
     const isActive = (href: string) => {
         if (href === '#') return false;
@@ -104,7 +172,7 @@ export default function SidebarFitnessCenter({ open, onClose }: { open?: boolean
                         VICCA SERA POLIMAK
                     </h2>
                     <p className="text-[11px] text-base-content/60 font-semibold mt-1 uppercase">
-                        Sistem Inventaris
+                        {subtitle}
                     </p>
                 </div>
                 <button className="btn btn-ghost btn-square lg:hidden" onClick={onClose}>
@@ -112,7 +180,7 @@ export default function SidebarFitnessCenter({ open, onClose }: { open?: boolean
                 </button>
             </div>
 
-            <div className="flex-1 px-3 py-3 overflow-y-auto">
+            <div ref={scrollRef} className="flex-1 px-3 py-3 overflow-y-auto">
                 {menuSections.map((section) => (
                     <div key={section.title} className="mb-4">
                         <p className="px-3 mb-2 text-[11px] font-bold tracking-wide text-base-content/50">
@@ -148,18 +216,15 @@ export default function SidebarFitnessCenter({ open, onClose }: { open?: boolean
             </div>
 
             <div className="p-3 border-t border-base-300">
-                <div className="flex items-center gap-3 rounded-xl bg-base-100/60 backdrop-blur-sm px-3 py-2 shadow-sm">
-                    <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-9">
-                            <span className="text-xs font-bold">AD</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-semibold leading-none">Administrator</p>
-                        <p className="text-xs text-base-content/60 mt-1">Admin</p>
-                    </div>
-                </div>
+                <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className="flex w-full items-center gap-3 rounded-xl bg-base-100/60 backdrop-blur-sm px-3 py-2 shadow-sm hover:bg-error/10 hover:text-error transition-colors"
+                >
+                    <LogOut size={18} strokeWidth={2} />
+                    <span className="text-sm font-semibold">Logout</span>
+                </Link>
             </div>
         </aside>
     );

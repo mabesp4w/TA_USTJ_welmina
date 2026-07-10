@@ -69,7 +69,7 @@ class ReportController extends Controller
             'rusak' => $items->where('itemCondition', 'rusak')->count(),
         ];
 
-        return Inertia::render('admin/report/Barang', [
+        return $this->inertia('admin/report/Barang', [
             'items' => $items,
             'stats' => $stats,
             'condition' => $condition,
@@ -178,7 +178,7 @@ class ReportController extends Controller
             ->take(10)
             ->values();
 
-        return Inertia::render('admin/report/Keuangan', [
+        return $this->inertia('admin/report/Keuangan', [
             'stats' => [
                 'totalIncome' => $totalIncome,
                 'totalExpenses' => $totalExpenses,
@@ -271,7 +271,7 @@ class ReportController extends Controller
         $totalIncome = $registrations->sum('amount') + $memberships->sum('amount');
         $totalExpenses = $procurements->sum('totalPrice') + $maintenances->sum('cost');
 
-        return Inertia::render('admin/report/Harian', [
+        return $this->inertia('admin/report/Harian', [
             'date' => $date,
             'stats' => [
                 'totalIncome' => $totalIncome,

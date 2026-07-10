@@ -9,7 +9,6 @@ use App\Models\MaintenanceLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class MaintenanceLogController extends Controller
@@ -54,7 +53,7 @@ class MaintenanceLogController extends Controller
                 'itemName' => $i->item_name,
             ]);
 
-        return Inertia::render('admin/MaintenanceLog', [
+        return $this->inertia('admin/MaintenanceLog', [
             'logs' => $logs,
             'stats' => $stats,
             'inventoryItems' => $inventoryItems,

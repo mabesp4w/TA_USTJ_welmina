@@ -8,7 +8,6 @@ use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class SupplierController extends Controller
@@ -45,7 +44,7 @@ class SupplierController extends Controller
             'withItems' => Supplier::whereHas('items')->count(),
         ];
 
-        return Inertia::render('admin/Supplier', [
+        return $this->inertia('admin/Supplier', [
             'suppliers' => $suppliers,
             'stats' => $stats,
         ]);

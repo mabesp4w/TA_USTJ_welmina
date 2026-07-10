@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { usePage } from '@inertiajs/react';
-import PengelolaSidebar from "./PengelolaSidebar";
+import SidebarFitnessCenter, { pengelolaMenuSections } from "../admin/sidebar";
 import PengelolaHeader from "./PengelolaHeader";
 
 export default function PengelolaLayout({
@@ -26,7 +26,12 @@ export default function PengelolaLayout({
                 />
             )}
 
-            <PengelolaSidebar open={sidebarOpen} onClose={closeSidebar} />
+            <SidebarFitnessCenter
+                open={sidebarOpen}
+                onClose={closeSidebar}
+                menuSections={pengelolaMenuSections}
+                subtitle="Panel Pengelola"
+            />
 
             <main className="flex flex-1 flex-col overflow-auto">
                 <PengelolaHeader title={title} onToggleSidebar={() => setSidebarOpen((v) => !v)}>

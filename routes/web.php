@@ -102,5 +102,19 @@ Route::middleware('auth')->group(function () {
     Route::inertia('pengelola/dashboard', 'pengelola/Dashboard')->name('pengelola.dashboard');
     Route::inertia('pimpinan/dashboard', 'pimpinan/Dashboard')->name('pimpinan.dashboard');
 
+    Route::get('pengelola/inventory', [InventoryController::class, 'index'])->name('pengelola.inventory');
+    Route::get('pengelola/gym-equipment', [GymEquipmentController::class, 'index'])->name('pengelola.gym-equipment');
+    Route::get('pengelola/maintenance-logs', [MaintenanceLogController::class, 'index'])->name('pengelola.maintenance-logs');
+    Route::get('pengelola/supplier', [SupplierController::class, 'index'])->name('pengelola.supplier');
+    Route::get('pengelola/report/barang', [ReportController::class, 'barang'])->name('pengelola.report.barang');
+    Route::get('pengelola/report/barang/pdf', [ReportController::class, 'barangPdf'])->name('pengelola.report.barang.pdf');
+    Route::get('pengelola/report/barang/excel', [ReportController::class, 'barangExcel'])->name('pengelola.report.barang.excel');
+    Route::get('pengelola/report/keuangan', [ReportController::class, 'keuangan'])->name('pengelola.report.keuangan');
+    Route::get('pengelola/report/keuangan/pdf', [ReportController::class, 'keuanganPdf'])->name('pengelola.report.keuangan.pdf');
+    Route::get('pengelola/report/keuangan/excel', [ReportController::class, 'keuanganExcel'])->name('pengelola.report.keuangan.excel');
+    Route::get('pengelola/report/harian', [ReportController::class, 'harian'])->name('pengelola.report.harian');
+    Route::get('pengelola/report/harian/pdf', [ReportController::class, 'harianPdf'])->name('pengelola.report.harian.pdf');
+    Route::get('pengelola/report/harian/excel', [ReportController::class, 'harianExcel'])->name('pengelola.report.harian.excel');
+
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
 });

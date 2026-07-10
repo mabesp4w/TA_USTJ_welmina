@@ -10,7 +10,6 @@ use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryController extends Controller
@@ -74,7 +73,7 @@ class InventoryController extends Controller
                 'supplierName' => $s->supplier_name,
             ]);
 
-        return Inertia::render('admin/Inventory', [
+        return $this->inertia('admin/Inventory', [
             'items' => $items,
             'stats' => $stats,
             'categories' => $categories,

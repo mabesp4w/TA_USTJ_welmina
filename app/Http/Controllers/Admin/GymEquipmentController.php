@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class GymEquipmentController extends Controller
@@ -41,7 +40,7 @@ class GymEquipmentController extends Controller
             'empty' => InventoryCategory::whereDoesntHave('items')->count(),
         ];
 
-        return Inertia::render('admin/GymEquipment', [
+        return $this->inertia('admin/GymEquipment', [
             'categories' => $categories,
             'stats' => $stats,
         ]);
