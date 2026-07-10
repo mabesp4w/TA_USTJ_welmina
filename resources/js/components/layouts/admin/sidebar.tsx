@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { activityLog, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, supplier, user as userRoute } from '@/routes/admin';
+import { activityLog, category, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, supplier, user as userRoute } from '@/routes/admin';
 import {
     dashboard as pengelolaDashboard,
     gymEquipment as pengelolaGymEquipment,
@@ -23,6 +23,7 @@ import {
     Dumbbell,
     FileText,
     History,
+    Layers,
     LayoutDashboard,
     LogOut,
     Package,
@@ -65,6 +66,7 @@ export const adminMenuSections: MenuSection[] = [
         items: [
             { label: "Data Inventaris", icon: Package, href: inventory.url() },
             { label: "Peralatan Gym", icon: Dumbbell, href: gymEquipment.url() },
+            { label: "Kategori", icon: Layers, href: category.url() },
             { label: "Perawatan Barang", icon: Wrench, href: maintenanceLogs.url() },
             { label: "Pemasok", icon: Building2, href: supplier.url() },
         ],

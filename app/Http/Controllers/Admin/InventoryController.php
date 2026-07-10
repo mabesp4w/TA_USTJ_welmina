@@ -11,6 +11,7 @@ use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 
 class InventoryController extends Controller
@@ -51,6 +52,7 @@ class InventoryController extends Controller
                 'itemStatus' => $i->item_status,
                 'locationName' => $i->location_name,
                 'supplierName' => $i->supplier?->supplier_name ?? '-',
+                'imagePath' => $i->image_path ? Storage::url($i->image_path) : null,
             ]);
 
         $stats = [
@@ -84,7 +86,7 @@ class InventoryController extends Controller
 
     public function store(StoreInventoryRequest $request): RedirectResponse
     {
-        $item = InventoryItem::create([
+        $data = [
             'item_code' => $request->input('itemCode'),
             'item_name' => $request->input('itemName'),
             'category_id' => $request->input('categoryId'),
@@ -95,7 +97,13 @@ class InventoryController extends Controller
             'supplier_id' => $request->input('supplierId'),
             'last_service_date' => $request->input('lastServiceDate'),
             'notes' => $request->input('notes'),
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('inventory-items', 'public');
+        }
+
+        $item = InventoryItem::create($data);
 
         ActivityLogService::log(
             activityType: 'tambah',
@@ -126,13 +134,14 @@ class InventoryController extends Controller
             'supplierId' => $inventory->supplier_id,
             'supplierName' => $inventory->supplier?->supplier_name ?? '-',
             'lastServiceDate' => $inventory->last_service_date?->toDateString(),
+            'imagePath' => $inventory->image_path ? Storage::url($inventory->image_path) : null,
             'notes' => $inventory->notes,
         ]);
     }
 
     public function update(StoreInventoryRequest $request, InventoryItem $inventory): RedirectResponse
     {
-        $inventory->update([
+        $data = [
             'item_code' => $request->input('itemCode'),
             'item_name' => $request->input('itemName'),
             'category_id' => $request->input('categoryId'),
@@ -143,7 +152,16 @@ class InventoryController extends Controller
             'supplier_id' => $request->input('supplierId'),
             'last_service_date' => $request->input('lastServiceDate'),
             'notes' => $request->input('notes'),
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            if ($inventory->image_path) {
+                Storage::disk('public')->delete($inventory->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('inventory-items', 'public');
+        }
+
+        $inventory->update($data);
 
         ActivityLogService::log(
             activityType: 'tambah',

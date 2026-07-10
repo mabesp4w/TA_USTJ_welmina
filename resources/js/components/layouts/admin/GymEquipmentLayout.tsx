@@ -29,14 +29,14 @@ export default function GymEquipmentLayout({ children }: { children: React.React
 
     return (
         <AdminLayout
-            title="Peralatan Gym"
+            title="Peralatan Fitness"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">
                         <Search size={16} className="opacity-70" />
                         <input
                             type="text"
-                            placeholder="Cari kategori..."
+                            placeholder="Cari peralatan..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -44,10 +44,10 @@ export default function GymEquipmentLayout({ children }: { children: React.React
 
                     <button
                         className="btn btn-primary gap-2"
-                        onClick={() => document.getElementById("category-modal")?.showModal()}
+                        onClick={() => document.getElementById("inventory-modal")?.showModal()}
                     >
                         <Plus size={18} />
-                        Tambah Kategori
+                        Tambah Peralatan
                     </button>
                 </>
             }

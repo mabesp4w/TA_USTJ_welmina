@@ -8,6 +8,7 @@ export type InventoryItem = {
     itemStatus: string;
     locationName: string | null;
     supplierName: string | null;
+    imagePath: string | null;
 };
 
 export type Stats = {
@@ -40,5 +41,6 @@ export type DetailResponse = {
     supplierId: number | null;
     supplierName: string | null;
     lastServiceDate: string | null;
+    imagePath: string | null;
     notes: string | null;
 };

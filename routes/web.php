@@ -49,6 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/gym-equipment/{gymEquipment}', [GymEquipmentController::class, 'update'])->name('admin.gym-equipment.update');
     Route::delete('admin/gym-equipment/{gymEquipment}', [GymEquipmentController::class, 'destroy'])->name('admin.gym-equipment.destroy');
 
+    Route::get('admin/category', [GymEquipmentController::class, 'category'])->name('admin.category');
+    Route::post('admin/category', [GymEquipmentController::class, 'categoryStore'])->name('admin.category.store');
+    Route::get('admin/category/{category}', [GymEquipmentController::class, 'categoryShow'])->name('admin.category.show');
+    Route::put('admin/category/{category}', [GymEquipmentController::class, 'categoryUpdate'])->name('admin.category.update');
+    Route::delete('admin/category/{category}', [GymEquipmentController::class, 'categoryDestroy'])->name('admin.category.destroy');
+
     Route::get('admin/supplier', [SupplierController::class, 'index'])->name('admin.supplier');
     Route::post('admin/supplier', [SupplierController::class, 'store'])->name('admin.supplier.store');
     Route::get('admin/supplier/{supplier}', [SupplierController::class, 'show'])->name('admin.supplier.show');

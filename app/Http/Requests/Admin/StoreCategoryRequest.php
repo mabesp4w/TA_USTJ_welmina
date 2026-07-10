@@ -25,7 +25,7 @@ class StoreCategoryRequest extends FormRequest
                     : 'unique:inventory_categories,category_name',
             ],
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'isFitnessTools' => 'boolean',
         ];
     }
 
@@ -35,6 +35,7 @@ class StoreCategoryRequest extends FormRequest
             'categoryName' => 'Nama Kategori',
             'description' => 'Deskripsi',
             'image' => 'Gambar',
+            'isFitnessTools' => 'Alat Fitness',
         ];
     }
 }

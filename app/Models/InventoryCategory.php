@@ -12,8 +12,15 @@ class InventoryCategory extends Model
     protected $fillable = [
         'category_name',
         'description',
-        'image',
+        'is_fitness_tools',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_fitness_tools' => 'boolean',
+        ];
+    }
 
     public function items(): HasMany
     {

@@ -32,6 +32,7 @@ class StoreInventoryRequest extends FormRequest
             'locationName' => 'nullable|string|max:100',
             'supplierId' => 'nullable|exists:suppliers,id',
             'lastServiceDate' => 'nullable|date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'notes' => 'nullable|string',
         ];
     }
@@ -48,6 +49,7 @@ class StoreInventoryRequest extends FormRequest
             'locationName' => 'Lokasi',
             'supplierId' => 'Supplier',
             'lastServiceDate' => 'Tgl. Service Terakhir',
+            'image' => 'Gambar',
             'notes' => 'Catatan',
         ];
     }

@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { format } from "date-fns";
 import { router } from "@inertiajs/react";
 import toast from "react-hot-toast";
-import { Package, Barcode, Layers, Hash, MapPin, Building2, CalendarDays, FileText, Wrench, CheckCircle2, XCircle } from "lucide-react";
+import { Package, Barcode, Layers, Hash, MapPin, Building2, CalendarDays, FileText, Wrench, CheckCircle2, XCircle, ImageUp, X } from "lucide-react";
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
 import DatePickerField from "@/components/ui/DatePickerField";
@@ -41,6 +41,9 @@ export default function InventoryForm({
     suppliers: SupplierOption[];
 }) {
     const isEdit = Boolean(inventory);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const {
         register,
@@ -78,25 +81,43 @@ export default function InventoryForm({
             setValue("supplierId", inventory.supplierId ?? undefined);
             setValue("lastServiceDate", inventory.lastServiceDate ? new Date(inventory.lastServiceDate) : undefined);
             setValue("notes", inventory.notes ?? "");
+            setImagePreview(inventory.imagePath ?? null);
         }
     }, [inventory, setValue]);
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
     const onSubmit = async (data: FormData) => {
-        const payload = {
-            itemCode: data.itemCode,
-            itemName: data.itemName,
-            categoryId: data.categoryId,
-            stock: data.stock,
-            itemCondition: data.itemCondition,
-            itemStatus: data.itemStatus,
-            locationName: data.locationName || null,
-            supplierId: data.supplierId || null,
-            lastServiceDate: data.lastServiceDate ? format(data.lastServiceDate, "yyyy-MM-dd") : null,
-            notes: data.notes || null,
-        };
+        const formData = new FormData();
+        formData.append("itemCode", data.itemCode);
+        formData.append("itemName", data.itemName);
+        formData.append("categoryId", String(data.categoryId));
+        formData.append("stock", String(data.stock));
+        formData.append("itemCondition", data.itemCondition);
+        formData.append("itemStatus", data.itemStatus);
+        if (data.locationName) formData.append("locationName", data.locationName);
+        if (data.supplierId) formData.append("supplierId", String(data.supplierId));
+        if (data.lastServiceDate) formData.append("lastServiceDate", format(data.lastServiceDate, "yyyy-MM-dd"));
+        if (data.notes) formData.append("notes", data.notes);
+        if (imageFile) formData.append("image", imageFile);
 
         if (isEdit && inventory) {
-            router.put(update.url({ inventory: inventory.id }), payload as any, {
+            formData.append("_method", "PUT");
+            router.post(update.url({ inventory: inventory.id }), formData, {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success("Data inventaris berhasil diperbarui!");
@@ -107,12 +128,13 @@ export default function InventoryForm({
                 },
             });
         } else {
-            router.post(store.url(), payload as any, {
+            router.post(store.url(), formData, {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success("Data inventaris berhasil disimpan!");
                     onSuccess?.();
                     reset();
+                    removeImage();
                 },
                 onError: () => {
                     toast.error("Gagal menyimpan data inventaris");
@@ -243,6 +265,50 @@ export default function InventoryForm({
                         registration={register("notes")}
                         error={errors.notes?.message}
                     />
+                </div>
+
+                <div className="md:col-span-8">
+                    <label className="form-control w-full">
+                        <div className="label pb-2">
+                            <span className="label-text text-xs font-semibold uppercase tracking-wide text-base-content/70">
+                                Gambar (Opsional)
+                            </span>
+                        </div>
+
+                        {imagePreview ? (
+                            <div className="relative w-full overflow-hidden rounded-lg border border-base-300">
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="h-48 w-full object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    className="btn btn-circle btn-ghost btn-xs absolute right-2 top-2 bg-base-100/80 backdrop-blur-sm"
+                                    onClick={removeImage}
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-base-300 bg-base-200/30 py-8 transition-colors hover:bg-base-200/50">
+                                <ImageUp size={32} className="text-base-content/40" />
+                                <span className="text-sm font-medium text-base-content/60">
+                                    Klik untuk upload gambar
+                                </span>
+                                <span className="text-xs text-base-content/40">
+                                    JPEG, PNG, WEBP (max 2MB)
+                                </span>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
+                            </label>
+                        )}
+                    </label>
                 </div>
             </div>
 

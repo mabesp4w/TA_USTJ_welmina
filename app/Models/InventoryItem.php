@@ -19,6 +19,7 @@ class InventoryItem extends Model
         'location_name',
         'supplier_id',
         'last_service_date',
+        'image_path',
         'notes',
     ];
 
