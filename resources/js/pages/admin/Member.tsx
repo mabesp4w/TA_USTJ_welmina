@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { router } from "@inertiajs/react";
 import toast from "react-hot-toast";
-import MemberLayout from "@/components/layouts/MemberLayout";
+import MemberLayout from "@/components/layouts/admin/MemberLayout";
 import Modal from "@/components/ui/Modal";
 import StatCard from "@/components/pages/admin/member/StatCard";
 import MemberListCard from "@/components/pages/admin/member/MemberListCard";
 import MemberForm from "@/components/pages/admin/member/MemberForm";
 import MemberDetail from "@/components/pages/admin/member/MemberDetail";
 import { show, destroy } from "@/routes/admin/member";
-import type { Stat, MemberItem, PackageOption } from "@/components/pages/admin/member/types";
+import type { Stat, MemberItem } from "@/components/pages/admin/member/types";
 
 type DetailResponse = {
     member: {
@@ -46,7 +46,7 @@ type EditMemberData = {
     memberStatus: string;
 };
 
-function MemberPage({ stats, members, packages }: { stats: Stat[]; members: MemberItem[]; packages: PackageOption[] }) {
+function MemberPage({ stats, members }: { stats: Stat[]; members: MemberItem[] }) {
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [selectedMember, setSelectedMember] = useState<MemberItem | null>(null);
     const [editData, setEditData] = useState<EditMemberData | null>(null);
@@ -157,7 +157,7 @@ function MemberPage({ stats, members, packages }: { stats: Stat[]; members: Memb
             </div>
 
             <Modal id="member-modal" title="Input Data Member Baru" size="3xl">
-                <MemberForm packages={packages} onCancel={closeForm} onSuccess={closeForm} />
+                <MemberForm onCancel={closeForm} onSuccess={closeForm} />
             </Modal>
 
             <Modal id="edit-modal" title="Edit Data Member" size="3xl">
@@ -168,7 +168,6 @@ function MemberPage({ stats, members, packages }: { stats: Stat[]; members: Memb
                 ) : (
                     editData && (
                         <MemberForm
-                            packages={packages}
                             onCancel={closeEditForm}
                             onSuccess={closeEditForm}
                             member={editData}

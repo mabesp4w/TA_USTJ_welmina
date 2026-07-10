@@ -1,5 +1,4 @@
-import { Search } from "lucide-react";
-import AdminLayout from "@/components/layouts/AdminLayout";
+import AdminLayout from "@/components/layouts/admin/AdminLayout";
 import StatCard from "@/components/pages/admin/dashboard/StatCard";
 import SimpleListCard from "@/components/pages/admin/dashboard/SimpleListCard";
 import MaintenanceCard from "@/components/pages/admin/dashboard/MaintenanceCard";
@@ -11,59 +10,55 @@ type StatCardData = {
     subtitle: string;
 };
 
-const statCards: StatCardData[] = [
-    {
-        title: "Total Inventaris",
-        value: "247",
-        subtitle: "Item baru 12",
-    },
-    {
-        title: "Kondisi Bagus",
-        value: "80%",
-        subtitle: "198/247 item baik",
-    },
-    {
-        title: "Perlu Perawatan",
-        value: "34",
-        subtitle: "Perlu tindakan",
-    },
-    {
-        title: "Rusak Tidak Layak",
-        value: "15",
-        subtitle: "Segera diganti",
-    },
-];
+type RecentItem = {
+    itemName: string;
+    categoryName: string;
+    itemCondition: string;
+    locationName: string | null;
+    updated: string;
+};
 
-const categories: ListItem[] = [
-    { name: "Beban Bebas" },
-    { name: "Kardio" },
-    { name: "Mesin Kabel" },
-    { name: "Aksesoris" },
-    { name: "Lainnya" },
-];
+type QuickSummary = {
+    aktif: number;
+    barangBaru: number;
+    sedangDiservis: number;
+    perluDiganti: number;
+};
 
-const activities: ListItem[] = [
-    { name: "Barbell 20kg ditambahkan", meta: "5 menit lalu" },
-    { name: "Treadmill TM-03 diservis", meta: "1 jam lalu" },
-    { name: "Matras Yoga dipindahkan", meta: "3 jam lalu" },
-];
+const conditionBadge: Record<string, string> = {
+    baik: "badge-success",
+    perlu_perawatan: "badge-warning",
+    rusak: "badge-error",
+};
 
-const maintenance: ListItem[] = [
-    { name: "Treadmill TM-03", meta: "Servis terjadwal" },
-    { name: "Barbell 20kg", meta: "Karat ringan" },
-    { name: "Treadmill RM-03", meta: "Perlu perbaikan" },
-    { name: "Rowing Machine", meta: "Dijadwalkan inspeksi" },
-    { name: "Matras Yoga", meta: "Sobek ringan" },
-];
+const conditionLabel: Record<string, string> = {
+    baik: "Baik",
+    perlu_perawatan: "Perlu Perawatan",
+    rusak: "Rusak",
+};
 
-function DashboardPage() {
+function DashboardPage({
+    stats,
+    categories,
+    activities,
+    maintenance,
+    quickSummary,
+    recentItems,
+}: {
+    stats: StatCardData[];
+    categories: ListItem[];
+    activities: ListItem[];
+    maintenance: ListItem[];
+    quickSummary: QuickSummary;
+    recentItems: RecentItem[];
+}) {
     return (
         <div className="min-h-screen">
             <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                 <div className="card">
                     <div className="card-body gap-6 p-4 md:p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {statCards.map((card) => (
+                            {stats.map((card) => (
                                 <StatCard
                                     key={card.title}
                                     title={card.title}
@@ -102,28 +97,28 @@ function DashboardPage() {
                                             <p className="text-xs uppercase tracking-wide text-base-content/60">
                                                 Inventaris Aktif
                                             </p>
-                                            <p className="mt-2 text-2xl font-bold">232</p>
+                                            <p className="mt-2 text-2xl font-bold">{quickSummary.aktif}</p>
                                         </div>
 
                                         <div className="rounded-box border border-base-200 p-4">
                                             <p className="text-xs uppercase tracking-wide text-base-content/60">
                                                 Barang Baru
                                             </p>
-                                            <p className="mt-2 text-2xl font-bold">12</p>
+                                            <p className="mt-2 text-2xl font-bold">{quickSummary.barangBaru}</p>
                                         </div>
 
                                         <div className="rounded-box border border-base-200 p-4">
                                             <p className="text-xs uppercase tracking-wide text-base-content/60">
                                                 Sedang Diservis
                                             </p>
-                                            <p className="mt-2 text-2xl font-bold">8</p>
+                                            <p className="mt-2 text-2xl font-bold">{quickSummary.sedangDiservis}</p>
                                         </div>
 
                                         <div className="rounded-box border border-base-200 p-4">
                                             <p className="text-xs uppercase tracking-wide text-base-content/60">
                                                 Perlu Diganti
                                             </p>
-                                            <p className="mt-2 text-2xl font-bold">15</p>
+                                            <p className="mt-2 text-2xl font-bold">{quickSummary.perluDiganti}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -142,46 +137,27 @@ function DashboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Barbell 20kg</td>
-                                        <td>Beban Bebas</td>
-                                        <td>
-                                            <span className="badge badge-success badge-sm">Baik</span>
-                                        </td>
-                                        <td>Area Beban</td>
-                                        <td>5 menit lalu</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Treadmill TM-03</td>
-                                        <td>Kardio</td>
-                                        <td>
-                                            <span className="badge badge-warning badge-sm">
-                                                Perawatan
-                                            </span>
-                                        </td>
-                                        <td>Zona Kardio</td>
-                                        <td>1 jam lalu</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Matras Yoga</td>
-                                        <td>Aksesoris</td>
-                                        <td>
-                                            <span className="badge badge-error badge-sm">Rusak</span>
-                                        </td>
-                                        <td>Studio</td>
-                                        <td>3 jam lalu</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Rowing Machine</td>
-                                        <td>Kardio</td>
-                                        <td>
-                                            <span className="badge badge-warning badge-sm">
-                                                Cek Rutin
-                                            </span>
-                                        </td>
-                                        <td>Zona Kardio</td>
-                                        <td>Kemarin</td>
-                                    </tr>
+                                    {recentItems.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="py-12 text-center text-sm text-base-content/50">
+                                                Belum ada data inventaris
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        recentItems.map((item) => (
+                                            <tr key={item.itemName}>
+                                                <td className="text-sm font-medium">{item.itemName}</td>
+                                                <td className="text-sm text-base-content/70">{item.categoryName}</td>
+                                                <td>
+                                                    <span className={`badge badge-sm ${conditionBadge[item.itemCondition]}`}>
+                                                        {conditionLabel[item.itemCondition]}
+                                                    </span>
+                                                </td>
+                                                <td className="text-sm text-base-content/70">{item.locationName ?? "-"}</td>
+                                                <td className="text-sm text-base-content/50">{item.updated}</td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -193,18 +169,7 @@ function DashboardPage() {
 }
 
 DashboardPage.layout = (page: React.ReactNode) => (
-    <AdminLayout
-        actions={
-            <>
-                <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">
-                    <Search size={16} className="opacity-70" />
-                    <input type="text" placeholder="Cari inventaris" />
-                </label>
-
-                <button className="btn btn-primary">Cari</button>
-            </>
-        }
-    >
+    <AdminLayout>
         {page}
     </AdminLayout>
 );

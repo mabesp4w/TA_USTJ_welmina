@@ -1,3 +1,5 @@
+import PengelolaLayout from "@/components/layouts/pengelola/PengelolaLayout";
+
 export default function PengelolaDashboard() {
     return (
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
@@ -19,3 +21,5 @@ export default function PengelolaDashboard() {
         </div>
     );
 }
+
+PengelolaDashboard.layout = (page: React.ReactNode) => <PengelolaLayout>{page}</PengelolaLayout>;

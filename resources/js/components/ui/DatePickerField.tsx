@@ -130,6 +130,9 @@ export default function DatePickerField<T extends FieldValues>({
                             yearDropdownItemNumber={yearDropdownItemNumber}
                             minDate={minDate}
                             maxDate={maxDate}
+                            wrapperClassName="w-full"
+                            popperPlacement="bottom-start"
+                            popperProps={{ strategy: "fixed" }}
                             renderCustomHeader={(props) => <CustomHeader {...props} />}
                         />
                     )}

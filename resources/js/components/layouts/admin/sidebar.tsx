@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
-import { dashboard, member } from '@/routes/admin';
+import { activityLog, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, supplier, user as userRoute } from '@/routes/admin';
 import { X } from "lucide-react";
 import {
+    Building2,
     LayoutDashboard,
     Users,
     UserPlus,
@@ -14,6 +15,10 @@ import {
     Bell,
     FileText,
     ShieldUser,
+    ClipboardList,
+    DollarSign,
+    CalendarDays,
+    Wrench,
 } from "lucide-react";
 
 const menuSections = [
@@ -27,30 +32,40 @@ const menuSections = [
         title: "MEMBER",
         items: [
             { label: "Data Member", icon: Users, href: member.url() },
-            { label: "Biaya Pendaftaran", icon: UserPlus, href: '#' },
-            { label: "Biaya Gym", icon: CreditCard, href: '#' },
+            { label: "Biaya Pendaftaran", icon: UserPlus, href: registrationPayment.url() },
+            { label: "Biaya Gym", icon: CreditCard, href: gymFee.url() },
         ],
     },
     {
         title: "IVENTARIS",
         items: [
-            { label: "Data Iventaris", icon: Package, href: '#' },
-            { label: "Peralatan Gym", icon: Dumbbell, href: '#' },
+            { label: "Data Inventaris", icon: Package, href: inventory.url() },
+            { label: "Peralatan Gym", icon: Dumbbell, href: gymEquipment.url() },
+            { label: "Perawatan Barang", icon: Wrench, href: maintenanceLogs.url() },
+            { label: "Pemasok", icon: Building2, href: supplier.url() },
         ],
     },
     {
         title: "TRANSAKSI",
         items: [
-            { label: "Pengadaan Barang", icon: ShoppingCart, href: '#' },
-            { label: "Riwayat Aktivitas", icon: History, href: '#' },
+            { label: "Pengadaan Barang", icon: ShoppingCart, href: procurement.url() },
+            { label: "Riwayat Aktivitas", icon: History, href: activityLog.url() },
+        ],
+    },
+    {
+        title: "CETAK LAPORAN",
+        items: [
+            { label: "Laporan Barang", icon: ClipboardList, href: report.barang.url() },
+            { label: "Laporan Keuangan", icon: DollarSign, href: report.keuangan.url() },
+            { label: "Laporan Harian", icon: CalendarDays, href: report.harian.url() },
         ],
     },
     {
         title: "SISTEM",
         items: [
-            { label: "Notifikasi", icon: Bell, href: '#' },
-            { label: "Pengguna", icon: ShieldUser, href: '#' },
-            { label: "Laporan", icon: FileText, href: '#' },
+            { label: "Laporan", icon: FileText, href: report.url() },
+            { label: "Notifikasi", icon: Bell, href: notification.url() },
+            { label: "Pengguna", icon: ShieldUser, href: userRoute.url() },
             { label: "Pengaturan", icon: Settings, href: '#' },
         ],
     },
@@ -61,7 +76,16 @@ export default function SidebarFitnessCenter({ open, onClose }: { open?: boolean
 
     const isActive = (href: string) => {
         if (href === '#') return false;
-        return url.startsWith(href);
+        if (url === href) return true;
+        if (!url.startsWith(href)) return false;
+        const nextChar = url[href.length];
+        if (nextChar === '?' || nextChar === undefined) return true;
+        if (nextChar === '/') {
+            const rest = url.slice(href.length + 1);
+            const nextSegment = rest.split('/')[0];
+            return nextSegment !== undefined && /^\d+$/.test(nextSegment);
+        }
+        return false;
     };
 
     return (

@@ -1,5 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { createRoot, type Root } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import { ShootingStarsGrid } from '@/components/ui/ShootingStarsGrid';
 
@@ -16,9 +16,7 @@ createInertiaApp({
         return pages[`./pages/${name}.tsx`];
     },
     setup({ el, App, props }) {
-        const root: Root = createRoot(el);
-
-        root.render(
+        const content = (
             <ShootingStarsGrid fullScreen starCount={90} shootingStarCount={8} interactive>
                 <App {...props} />
                 <Toaster
@@ -28,7 +26,13 @@ createInertiaApp({
                         className: "border border-base-300 bg-base-100 shadow-lg",
                     }}
                 />
-            </ShootingStarsGrid>,
+            </ShootingStarsGrid>
         );
+
+        if (typeof document !== "undefined") {
+            createRoot(el).render(content);
+        }
+
+        return content;
     },
 });

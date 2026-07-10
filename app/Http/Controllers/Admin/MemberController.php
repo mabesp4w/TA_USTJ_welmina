@@ -7,8 +7,6 @@ use App\Http\Requests\Admin\StoreMemberRequest;
 use App\Http\Requests\Admin\UpdateMemberRequest;
 use App\Models\Member;
 use App\Models\MemberMembership;
-use App\Models\MembershipPackage;
-use App\Models\MembershipPackagePrice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,18 +62,6 @@ class MemberController extends Controller
             ->count();
         $inactive = Member::where('member_status', 'inactive')->count();
 
-        $packages = MembershipPackage::with('prices')->where('is_active', true)->get()->map(
-            fn (MembershipPackage $p) => [
-                'id' => $p->id,
-                'packageName' => $p->package_name,
-                'registrationFee' => (int) $p->registration_fee,
-                'prices' => $p->prices->map(fn (MembershipPackagePrice $pr) => [
-                    'durationMonths' => $pr->duration_months,
-                    'price' => (int) $pr->price,
-                ]),
-            ],
-        );
-
         return Inertia::render('admin/Member', [
             'stats' => [
                 ['title' => 'Total Member', 'value' => (string) $total, 'subtitle' => 'Terdaftar di sistem'],
@@ -84,18 +70,14 @@ class MemberController extends Controller
                 ['title' => 'Nonaktif', 'value' => (string) $inactive, 'subtitle' => 'Masa berlaku habis'],
             ],
             'members' => $members,
-            'packages' => $packages,
         ]);
     }
 
     public function store(StoreMemberRequest $request): RedirectResponse
     {
         $birthDate = $request->date('birthDate');
-        $startDate = $request->date('startDate');
-        $durationMonths = (int) $request->input('durationMonths');
-        $endDate = $startDate->copy()->addMonths($durationMonths);
 
-        $member = Member::create([
+        Member::create([
             'member_code' => $this->generateMemberCode(),
             'full_name' => $request->input('fullName'),
             'identity_no' => $request->input('identityNo'),
@@ -104,18 +86,8 @@ class MemberController extends Controller
             'gender' => $request->input('gender'),
             'email' => $request->input('email'),
             'address' => $request->input('address'),
-            'member_status' => 'active',
+            'member_status' => 'inactive',
             'joined_at' => now(),
-            'created_by' => $request->user()?->id,
-        ]);
-
-        MemberMembership::create([
-            'member_id' => $member->id,
-            'package_id' => $request->input('packageId'),
-            'duration_months' => $durationMonths,
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'status' => 'active',
             'created_by' => $request->user()?->id,
         ]);
 
