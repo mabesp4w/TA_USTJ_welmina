@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreProcurementRequest;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\Supplier;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,7 +78,7 @@ class ProcurementController extends Controller
         $quantity = (int) $request->input('quantity');
         $totalPrice = $unitPrice * $quantity;
 
-        Procurement::create([
+        $procurement = Procurement::create([
             'procurement_code' => $request->input('procurementCode'),
             'item_id' => $request->input('itemId'),
             'supplier_id' => $request->input('supplierId'),
@@ -87,6 +88,17 @@ class ProcurementController extends Controller
             'procurement_date' => $request->input('procurementDate'),
             'notes' => $request->input('notes'),
         ]);
+
+        $itemName = $procurement->item?->item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Tambah Pengadaan: '.$itemName,
+            description: 'Menambahkan pengadaan "'.$itemName.'" ('.$procurement->procurement_code.') sebanyak '.$quantity.' unit',
+            inventoryItemId: $procurement->item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement->id,
+        );
 
         return redirect()->route('admin.procurement')->with('success', 'Data pengadaan berhasil disimpan!');
     }
@@ -127,11 +139,33 @@ class ProcurementController extends Controller
             'notes' => $request->input('notes'),
         ]);
 
+        $itemName = $procurement->item?->item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Update Pengadaan: '.$itemName,
+            description: 'Memperbarui data pengadaan "'.$itemName.'" ('.$procurement->procurement_code.')',
+            inventoryItemId: $procurement->item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement->id,
+        );
+
         return redirect()->route('admin.procurement')->with('success', 'Data pengadaan berhasil diperbarui!');
     }
 
     public function destroy(Procurement $procurement): RedirectResponse
     {
+        $itemName = $procurement->item?->item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pengadaan: '.$itemName,
+            description: 'Menghapus data pengadaan "'.$itemName.'" ('.$procurement->procurement_code.')',
+            inventoryItemId: $procurement->item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement->id,
+        );
+
         $procurement->delete();
 
         return redirect()->route('admin.procurement')->with('success', 'Data pengadaan berhasil dihapus!');

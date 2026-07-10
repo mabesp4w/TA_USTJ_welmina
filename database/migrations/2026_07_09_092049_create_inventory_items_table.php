@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('location_name', 100)->nullable();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete()->cascadeOnUpdate();
             $table->date('last_service_date')->nullable();
+            // image_path
+            $table->string('image_path')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 

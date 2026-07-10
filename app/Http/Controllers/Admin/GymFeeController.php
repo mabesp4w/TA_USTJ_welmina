@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGymFeeRequest;
 use App\Models\MembershipPackage;
 use App\Models\MembershipPackagePrice;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,6 +73,14 @@ class GymFeeController extends Controller
             ]);
         }
 
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Tambah Paket: '.$package->package_name,
+            description: 'Menambahkan paket gym baru "'.$package->package_name.'"',
+            referenceTable: 'membership_packages',
+            referenceId: $package->id,
+        );
+
         return redirect()->route('admin.gym-fee')->with('success', 'Data paket gym berhasil disimpan!');
     }
 
@@ -128,11 +137,27 @@ class GymFeeController extends Controller
             }
         }
 
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Update Paket: '.$gymFee->package_name,
+            description: 'Memperbarui paket gym "'.$gymFee->package_name.'"',
+            referenceTable: 'membership_packages',
+            referenceId: $gymFee->id,
+        );
+
         return redirect()->route('admin.gym-fee')->with('success', 'Data paket gym berhasil diperbarui!');
     }
 
     public function destroy(MembershipPackage $gymFee): RedirectResponse
     {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Paket: '.$gymFee->package_name,
+            description: 'Menghapus paket gym "'.$gymFee->package_name.'"',
+            referenceTable: 'membership_packages',
+            referenceId: $gymFee->id,
+        );
+
         $gymFee->delete();
 
         return redirect()->route('admin.gym-fee')->with('success', 'Data paket gym berhasil dihapus!');

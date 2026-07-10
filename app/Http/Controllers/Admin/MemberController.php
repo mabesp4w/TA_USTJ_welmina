@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreMemberRequest;
 use App\Http\Requests\Admin\UpdateMemberRequest;
 use App\Models\Member;
 use App\Models\MemberMembership;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,7 +78,7 @@ class MemberController extends Controller
     {
         $birthDate = $request->date('birthDate');
 
-        Member::create([
+        $member = Member::create([
             'member_code' => $this->generateMemberCode(),
             'full_name' => $request->input('fullName'),
             'identity_no' => $request->input('identityNo'),
@@ -90,6 +91,15 @@ class MemberController extends Controller
             'joined_at' => now(),
             'created_by' => $request->user()?->id,
         ]);
+
+        ActivityLogService::log(
+            activityType: 'pendaftaran',
+            activityName: 'Tambah Member: '.$member->full_name,
+            description: 'Menambahkan member baru "'.$member->full_name.'" ('.$member->member_code.')',
+            memberId: $member->id,
+            referenceTable: 'members',
+            referenceId: $member->id,
+        );
 
         return redirect()->route('admin.member')->with('success', 'Data member berhasil disimpan!');
     }
@@ -138,11 +148,29 @@ class MemberController extends Controller
             'member_status' => $request->input('memberStatus', $member->member_status),
         ]);
 
+        ActivityLogService::log(
+            activityType: 'pendaftaran',
+            activityName: 'Update Member: '.$member->full_name,
+            description: 'Memperbarui data member "'.$member->full_name.'" ('.$member->member_code.')',
+            memberId: $member->id,
+            referenceTable: 'members',
+            referenceId: $member->id,
+        );
+
         return redirect()->route('admin.member')->with('success', 'Data member berhasil diperbarui!');
     }
 
     public function destroy(Member $member): RedirectResponse
     {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Member: '.$member->full_name,
+            description: 'Menghapus member "'.$member->full_name.'" ('.$member->member_code.')',
+            memberId: $member->id,
+            referenceTable: 'members',
+            referenceId: $member->id,
+        );
+
         $member->delete();
 
         return redirect()->route('admin.member')->with('success', 'Data member berhasil dihapus!');

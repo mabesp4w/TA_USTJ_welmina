@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreInventoryRequest;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\Supplier;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,7 +84,7 @@ class InventoryController extends Controller
 
     public function store(StoreInventoryRequest $request): RedirectResponse
     {
-        InventoryItem::create([
+        $item = InventoryItem::create([
             'item_code' => $request->input('itemCode'),
             'item_name' => $request->input('itemName'),
             'category_id' => $request->input('categoryId'),
@@ -95,6 +96,15 @@ class InventoryController extends Controller
             'last_service_date' => $request->input('lastServiceDate'),
             'notes' => $request->input('notes'),
         ]);
+
+        ActivityLogService::log(
+            activityType: 'tambah',
+            activityName: 'Tambah Barang: '.$item->item_name,
+            description: 'Menambahkan barang inventaris "'.$item->item_name.'" ('.$item->item_code.') dengan stok '.$item->stock,
+            inventoryItemId: $item->id,
+            referenceTable: 'inventory_items',
+            referenceId: $item->id,
+        );
 
         return redirect()->route('admin.inventory')->with('success', 'Data inventaris berhasil disimpan!');
     }
@@ -135,11 +145,29 @@ class InventoryController extends Controller
             'notes' => $request->input('notes'),
         ]);
 
+        ActivityLogService::log(
+            activityType: 'tambah',
+            activityName: 'Update Barang: '.$inventory->item_name,
+            description: 'Memperbarui data barang inventaris "'.$inventory->item_name.'" ('.$inventory->item_code.')',
+            inventoryItemId: $inventory->id,
+            referenceTable: 'inventory_items',
+            referenceId: $inventory->id,
+        );
+
         return redirect()->route('admin.inventory')->with('success', 'Data inventaris berhasil diperbarui!');
     }
 
     public function destroy(InventoryItem $inventory): RedirectResponse
     {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Barang: '.$inventory->item_name,
+            description: 'Menghapus barang inventaris "'.$inventory->item_name.'" ('.$inventory->item_code.')',
+            inventoryItemId: $inventory->id,
+            referenceTable: 'inventory_items',
+            referenceId: $inventory->id,
+        );
+
         $inventory->delete();
 
         return redirect()->route('admin.inventory')->with('success', 'Data inventaris berhasil dihapus!');

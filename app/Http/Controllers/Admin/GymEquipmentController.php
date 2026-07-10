@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Models\InventoryCategory;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,7 +58,15 @@ class GymEquipmentController extends Controller
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
 
-        InventoryCategory::create($data);
+        $category = InventoryCategory::create($data);
+
+        ActivityLogService::log(
+            activityType: 'tambah',
+            activityName: 'Tambah Kategori: '.$category->category_name,
+            description: 'Menambahkan kategori peralatan baru "'.$category->category_name.'"',
+            referenceTable: 'inventory_categories',
+            referenceId: $category->id,
+        );
 
         return redirect()->route('admin.gym-equipment')->with('success', 'Kategori peralatan gym berhasil disimpan!');
     }
@@ -90,11 +99,27 @@ class GymEquipmentController extends Controller
 
         $gymEquipment->update($data);
 
+        ActivityLogService::log(
+            activityType: 'tambah',
+            activityName: 'Update Kategori: '.$gymEquipment->category_name,
+            description: 'Memperbarui kategori peralatan "'.$gymEquipment->category_name.'"',
+            referenceTable: 'inventory_categories',
+            referenceId: $gymEquipment->id,
+        );
+
         return redirect()->route('admin.gym-equipment')->with('success', 'Kategori peralatan gym berhasil diperbarui!');
     }
 
     public function destroy(InventoryCategory $gymEquipment): RedirectResponse
     {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Kategori: '.$gymEquipment->category_name,
+            description: 'Menghapus kategori peralatan "'.$gymEquipment->category_name.'"',
+            referenceTable: 'inventory_categories',
+            referenceId: $gymEquipment->id,
+        );
+
         if ($gymEquipment->image) {
             Storage::disk('public')->delete($gymEquipment->image);
         }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,7 +58,7 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        User::create([
+        $user = User::create([
             'full_name' => $request->input('fullName'),
             'username' => $request->input('username'),
             'email' => $request->input('email'),
@@ -65,6 +66,14 @@ class UserController extends Controller
             'role' => $request->input('role'),
             'is_active' => $request->boolean('isActive', true),
         ]);
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Tambah Pengguna: '.$user->full_name,
+            description: 'Menambahkan pengguna baru "'.$user->full_name.'" ('.$user->username.') dengan role '.$user->role,
+            referenceTable: 'users',
+            referenceId: $user->id,
+        );
 
         return redirect()->route('admin.user')->with('success', 'Pengguna berhasil disimpan!');
     }
@@ -97,6 +106,14 @@ class UserController extends Controller
 
         $user->update($data);
 
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Update Pengguna: '.$user->full_name,
+            description: 'Memperbarui data pengguna "'.$user->full_name.'" ('.$user->username.')',
+            referenceTable: 'users',
+            referenceId: $user->id,
+        );
+
         return redirect()->route('admin.user')->with('success', 'Pengguna berhasil diperbarui!');
     }
 
@@ -105,6 +122,14 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.user')->with('error', 'Tidak dapat menghapus akun sendiri!');
         }
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pengguna: '.$user->full_name,
+            description: 'Menghapus pengguna "'.$user->full_name.'" ('.$user->username.')',
+            referenceTable: 'users',
+            referenceId: $user->id,
+        );
 
         $user->delete();
 

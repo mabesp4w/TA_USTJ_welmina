@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSupplierRequest;
 use App\Models\Supplier;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,13 +53,21 @@ class SupplierController extends Controller
 
     public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        Supplier::create([
+        $supplier = Supplier::create([
             'supplier_name' => $request->input('supplierName'),
             'phone' => $request->input('phone'),
             'email' => $request->input('email'),
             'address' => $request->input('address'),
             'notes' => $request->input('notes'),
         ]);
+
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Tambah Supplier: '.$supplier->supplier_name,
+            description: 'Menambahkan pemasok baru "'.$supplier->supplier_name.'"',
+            referenceTable: 'suppliers',
+            referenceId: $supplier->id,
+        );
 
         return redirect()->route('admin.supplier')->with('success', 'Data pemasok berhasil disimpan!');
     }
@@ -85,11 +94,27 @@ class SupplierController extends Controller
             'notes' => $request->input('notes'),
         ]);
 
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Update Supplier: '.$supplier->supplier_name,
+            description: 'Memperbarui data pemasok "'.$supplier->supplier_name.'"',
+            referenceTable: 'suppliers',
+            referenceId: $supplier->id,
+        );
+
         return redirect()->route('admin.supplier')->with('success', 'Data pemasok berhasil diperbarui!');
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
     {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Supplier: '.$supplier->supplier_name,
+            description: 'Menghapus pemasok "'.$supplier->supplier_name.'"',
+            referenceTable: 'suppliers',
+            referenceId: $supplier->id,
+        );
+
         $supplier->delete();
 
         return redirect()->route('admin.supplier')->with('success', 'Data pemasok berhasil dihapus!');

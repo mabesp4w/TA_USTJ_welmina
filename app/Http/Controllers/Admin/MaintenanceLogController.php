@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreMaintenanceLogRequest;
 use App\Models\InventoryItem;
 use App\Models\MaintenanceLog;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,7 +63,7 @@ class MaintenanceLogController extends Controller
 
     public function store(StoreMaintenanceLogRequest $request): RedirectResponse
     {
-        MaintenanceLog::create([
+        $log = MaintenanceLog::create([
             'inventory_item_id' => $request->input('inventoryItemId'),
             'maintenance_type' => $request->input('maintenanceType'),
             'maintenance_date' => $request->input('maintenanceDate'),
@@ -72,6 +73,18 @@ class MaintenanceLogController extends Controller
             'notes' => $request->input('notes'),
             'created_by' => $request->user()->id,
         ]);
+
+        $itemName = $log->inventoryItem?->item_name ?? 'Unknown';
+        $typeLabel = $log->maintenance_type === 'perbaikan' ? 'Perbaikan' : 'Perawatan';
+
+        ActivityLogService::log(
+            activityType: 'servis',
+            activityName: 'Tambah '.$typeLabel.': '.$itemName,
+            description: $typeLabel.' barang "'.$itemName.'" dengan biaya Rp '.number_format($log->cost, 0, ',', '.'),
+            inventoryItemId: $log->inventory_item_id,
+            referenceTable: 'maintenance_logs',
+            referenceId: $log->id,
+        );
 
         return redirect()->route('admin.maintenance-logs')->with('success', 'Data perawatan berhasil disimpan!');
     }
@@ -105,11 +118,34 @@ class MaintenanceLogController extends Controller
             'notes' => $request->input('notes'),
         ]);
 
+        $itemName = $maintenanceLog->inventoryItem?->item_name ?? 'Unknown';
+        $typeLabel = $maintenanceLog->maintenance_type === 'perbaikan' ? 'Perbaikan' : 'Perawatan';
+
+        ActivityLogService::log(
+            activityType: 'servis',
+            activityName: 'Update '.$typeLabel.': '.$itemName,
+            description: 'Memperbarui data '.strtolower($typeLabel).' barang "'.$itemName.'"',
+            inventoryItemId: $maintenanceLog->inventory_item_id,
+            referenceTable: 'maintenance_logs',
+            referenceId: $maintenanceLog->id,
+        );
+
         return redirect()->route('admin.maintenance-logs')->with('success', 'Data perawatan berhasil diperbarui!');
     }
 
     public function destroy(MaintenanceLog $maintenanceLog): RedirectResponse
     {
+        $itemName = $maintenanceLog->inventoryItem?->item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Perawatan: '.$itemName,
+            description: 'Menghapus data perawatan barang "'.$itemName.'"',
+            inventoryItemId: $maintenanceLog->inventory_item_id,
+            referenceTable: 'maintenance_logs',
+            referenceId: $maintenanceLog->id,
+        );
+
         $maintenanceLog->delete();
 
         return redirect()->route('admin.maintenance-logs')->with('success', 'Data perawatan berhasil dihapus!');

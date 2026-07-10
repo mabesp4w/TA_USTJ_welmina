@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('category_name', 100)->unique();
             $table->text('description')->nullable();
-            $table->string('image')->nullable();
+            $table->boolean('is_fitness_tools')->default(false);
             $table->timestamps();
         });
     }

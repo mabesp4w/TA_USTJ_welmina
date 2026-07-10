@@ -9,6 +9,7 @@ use App\Models\MemberMembership;
 use App\Models\MembershipPackage;
 use App\Models\MembershipPackagePrice;
 use App\Models\RegistrationPayment;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -138,6 +139,17 @@ class RegistrationPaymentController extends Controller
 
         Member::where('id', $memberId)->update(['member_status' => 'active']);
 
+        $member = Member::find($memberId);
+
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Tambah Pembayaran: '.($member?->full_name ?? 'Unknown'),
+            description: 'Menambahkan pembayaran pendaftaran member "'.($member?->full_name ?? 'Unknown').'" ('.$member?->member_code.')',
+            memberId: $memberId,
+            referenceTable: 'registration_payments',
+            referenceId: $memberId,
+        );
+
         return redirect()->route('admin.registration-payment')->with('success', 'Data biaya pendaftaran berhasil disimpan!');
     }
 
@@ -212,12 +224,30 @@ class RegistrationPaymentController extends Controller
             ]);
         }
 
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Update Pembayaran: '.($registrationPayment->member?->full_name ?? 'Unknown'),
+            description: 'Memperbarui data pembayaran pendaftaran member "'.($registrationPayment->member?->full_name ?? 'Unknown').'"',
+            memberId: $registrationPayment->member_id,
+            referenceTable: 'registration_payments',
+            referenceId: $registrationPayment->id,
+        );
+
         return redirect()->route('admin.registration-payment')->with('success', 'Data biaya pendaftaran berhasil diperbarui!');
     }
 
     public function destroy(RegistrationPayment $registrationPayment): RedirectResponse
     {
         $memberId = $registrationPayment->member_id;
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pembayaran: '.($registrationPayment->member?->full_name ?? 'Unknown'),
+            description: 'Menghapus data pembayaran pendaftaran member "'.($registrationPayment->member?->full_name ?? 'Unknown').'"',
+            memberId: $memberId,
+            referenceTable: 'registration_payments',
+            referenceId: $registrationPayment->id,
+        );
 
         MemberMembership::where('member_id', $memberId)
             ->where('package_id', $registrationPayment->package_id)
