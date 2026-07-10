@@ -29,6 +29,7 @@ export default function PengelolaInventoryLayout({ children }: { children: React
 
     return (
         <PengelolaLayout
+            title="Inventaris"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

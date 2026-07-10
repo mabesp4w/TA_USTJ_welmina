@@ -10,7 +10,7 @@ import { store, update } from "@/routes/admin/gym-equipment";
 import type { DetailResponse } from "./types";
 
 const schema = yup.object({
-    categoryName: yup.string().required("Nama kategori wajib diisi").max(100),
+    categoryName: yup.string().required("Nama peralatan wajib diisi").max(100),
     description: yup.string().nullable().notRequired(),
 });
 
@@ -82,24 +82,24 @@ export default function GymEquipmentForm({
             router.post(update.url({ gymEquipment: category.id }), formData, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success("Kategori peralatan berhasil diperbarui!");
+                    toast.success("peralatan peralatan berhasil diperbarui!");
                     onSuccess?.();
                 },
                 onError: () => {
-                    toast.error("Gagal memperbarui kategori peralatan");
+                    toast.error("Gagal memperbarui peralatan peralatan");
                 },
             });
         } else {
             router.post(store.url(), formData, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success("Kategori peralatan berhasil disimpan!");
+                    toast.success("peralatan peralatan berhasil disimpan!");
                     onSuccess?.();
                     reset();
                     removeImage();
                 },
                 onError: () => {
-                    toast.error("Gagal menyimpan kategori peralatan");
+                    toast.error("Gagal menyimpan peralatan peralatan");
                 },
             });
         }
@@ -110,7 +110,7 @@ export default function GymEquipmentForm({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-8">
                 <div className="md:col-span-4">
                     <InputField
-                        label="Nama Kategori"
+                        label="Nama peralatan"
                         placeholder="Contoh: Alat Kardio, Beban Bebas"
                         icon={<Layers size={16} />}
                         registration={register("categoryName")}
@@ -121,7 +121,7 @@ export default function GymEquipmentForm({
                 <div className="md:col-span-4">
                     <InputField
                         label="Deskripsi (Opsional)"
-                        placeholder="Deskripsi kategori"
+                        placeholder="Deskripsi peralatan"
                         icon={<FileText size={16} />}
                         registration={register("description")}
                         error={errors.description?.message}

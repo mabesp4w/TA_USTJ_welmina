@@ -36,7 +36,7 @@ function GymEquipmentPage({
             const data: DetailResponse = await res.json();
             setDetailData(data);
         } catch {
-            toast.error("Gagal memuat detail kategori");
+            toast.error("Gagal memuat detail peralatan");
         }
 
         setDetailLoading(false);
@@ -53,7 +53,7 @@ function GymEquipmentPage({
             const data: DetailResponse = await res.json();
             setEditData(data);
         } catch {
-            toast.error("Gagal memuat data kategori");
+            toast.error("Gagal memuat data peralatan");
         }
 
         setEditLoading(false);
@@ -72,12 +72,12 @@ function GymEquipmentPage({
         router.delete(destroy.url({ gymEquipment: selectedCategory.id }), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success("Kategori peralatan berhasil dihapus!");
+                toast.success("peralatan peralatan berhasil dihapus!");
                 document.getElementById("delete-modal")?.close();
                 setSelectedCategory(null);
             },
             onError: () => {
-                toast.error("Gagal menghapus kategori peralatan");
+                toast.error("Gagal menghapus peralatan peralatan");
             },
             onFinish: () => setDeleteLoading(false),
         });
@@ -93,8 +93,8 @@ function GymEquipmentPage({
     };
 
     const statCards = [
-        { title: "Total Kategori", value: String(stats.total), subtitle: "Seluruh kategori" },
-        { title: "Memiliki Barang", value: String(stats.withItems), subtitle: "Kategori terisi" },
+        { title: "Total peralatan", value: String(stats.total), subtitle: "Seluruh peralatan" },
+        { title: "Memiliki Barang", value: String(stats.withItems), subtitle: "peralatan terisi" },
         { title: "Kosong", value: String(stats.empty), subtitle: "Belum ada barang" },
     ];
 
@@ -121,11 +121,11 @@ function GymEquipmentPage({
                 </div>
             </div>
 
-            <Modal id="category-modal" title="Tambah Kategori Peralatan" size="3xl">
+            <Modal id="category-modal" title="Tambah peralatan Peralatan" size="3xl">
                 <GymEquipmentForm onCancel={closeForm} onSuccess={closeForm} />
             </Modal>
 
-            <Modal id="edit-modal" title="Edit Kategori Peralatan" size="3xl">
+            <Modal id="edit-modal" title="Edit peralatan Peralatan" size="3xl">
                 {editLoading ? (
                     <div className="flex items-center justify-center py-12">
                         <span className="loading loading-spinner loading-lg" />
@@ -141,7 +141,7 @@ function GymEquipmentPage({
                 )}
             </Modal>
 
-            <Modal id="detail-modal" title="Detail Kategori" size="3xl">
+            <Modal id="detail-modal" title="Detail peralatan" size="3xl">
                 {detailLoading ? (
                     <div className="flex items-center justify-center py-12">
                         <span className="loading loading-spinner loading-lg" />
@@ -153,7 +153,7 @@ function GymEquipmentPage({
 
             <Modal id="delete-modal" title="Konfirmasi Hapus" size="sm">
                 <p className="text-sm leading-relaxed text-base-content/70">
-                    Apakah Anda yakin ingin menghapus kategori{" "}
+                    Apakah Anda yakin ingin menghapus peralatan{" "}
                     <span className="font-semibold text-base-content">{selectedCategory?.categoryName}</span>?
                     Data yang sudah dihapus tidak dapat dikembalikan.
                 </p>

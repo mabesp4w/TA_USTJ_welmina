@@ -29,6 +29,7 @@ export default function PengelolaSupplierLayout({ children }: { children: React.
 
     return (
         <PengelolaLayout
+            title="Pemasok"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">

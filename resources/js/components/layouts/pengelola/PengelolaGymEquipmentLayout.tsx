@@ -29,13 +29,14 @@ export default function PengelolaGymEquipmentLayout({ children }: { children: Re
 
     return (
         <PengelolaLayout
+            title="Peralatan Gym"
             actions={
                 <>
                     <label className="input input-bordered flex w-full items-center gap-2 sm:w-72">
                         <Search size={16} className="opacity-70" />
                         <input
                             type="text"
-                            placeholder="Cari kategori..."
+                            placeholder="Cari peralatan..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -46,7 +47,7 @@ export default function PengelolaGymEquipmentLayout({ children }: { children: Re
                         onClick={() => document.getElementById("category-modal")?.showModal()}
                     >
                         <Plus size={18} />
-                        Tambah Kategori
+                        Tambah Peralatan
                     </button>
                 </>
             }

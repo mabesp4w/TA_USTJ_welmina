@@ -27,7 +27,7 @@ export default function GymEquipmentDetail({ data }: { data: DetailResponse | nu
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">
-                        Nama Kategori
+                        Nama peralatan
                     </p>
                     <p className="mt-1 text-sm font-medium text-base-content">{data.categoryName}</p>
                 </div>

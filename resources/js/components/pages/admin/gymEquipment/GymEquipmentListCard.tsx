@@ -15,11 +15,11 @@ export default function GymEquipmentListCard({
     return (
         <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
             <div className="card-body p-4 md:p-5">
-                <h2 className="text-lg font-bold text-base-content">Daftar Kategori Peralatan</h2>
+                <h2 className="text-lg font-bold text-base-content">Daftar peralatan Peralatan</h2>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {categories.length === 0 ? (
                         <div className="col-span-full py-12 text-center text-sm text-base-content/50">
-                            Belum ada kategori peralatan
+                            Belum ada peralatan peralatan
                         </div>
                     ) : (
                         categories.map((item) => (

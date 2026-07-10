@@ -6,14 +6,19 @@ import PengelolaHeader from "./PengelolaHeader";
 export default function PengelolaLayout({
     children,
     actions,
+    title
 }: {
     children: React.ReactNode;
     actions?: React.ReactNode;
+    title?: string;
 }) {
-    const { component } = usePage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { component } = usePage();
 
-    const title = component?.replace(/^pengelola\//, '') || 'Dashboard';
+    if (!title) {
+        title = component?.replace(/^pengelola\//, '');
+    }
+
 
     const closeSidebar = () => setSidebarOpen(false);
 
