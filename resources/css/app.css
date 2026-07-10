@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+@plugin 'daisyui' {
+    themes: cupcake --default;
+}
+
+@utility btn {
+    @apply rounded-lg;
+}
+
+@utility input {
+    @apply rounded-lg;
+    @apply text-gray-900;
+}
+
+@utility checkbox {
+    @apply rounded-lg;
+}
+
+@utility radio {
+    @apply rounded-lg;
+}
+
+
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+}
