@@ -36,7 +36,7 @@ class ActivitySeeder extends Seeder
                 'activity_type' => $type,
                 'inventory_item_id' => rand(0, 2) === 0 ? rand(1, 25) : null,
                 'member_id' => rand(0, 2) === 0 ? rand(1, 25) : null,
-                'user_id' => $userIds[array_rand($userIds)],
+                'user_id' => 1,
                 'description' => 'Aktivitas '.$type.' - '.$names[array_rand($names)],
                 'reference_table' => $referenceTables[array_rand($referenceTables)],
                 'reference_id' => rand(1, 25),
@@ -79,7 +79,7 @@ class ActivitySeeder extends Seeder
                 'is_read' => rand(0, 1),
                 'related_table' => $referenceTables[array_rand($referenceTables)],
                 'related_id' => rand(1, 25),
-                'created_by' => $userIds[array_rand($userIds)],
+                'created_by' => 1,
                 'created_at' => now()->subDays(rand(0, 30)),
                 'updated_at' => now(),
             ];

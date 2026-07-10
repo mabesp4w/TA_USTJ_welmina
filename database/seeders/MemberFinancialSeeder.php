@@ -31,7 +31,7 @@ class MemberFinancialSeeder extends Seeder
                 'payment_method' => $paymentMethods[array_rand($paymentMethods)],
                 'payment_status' => $status,
                 'notes' => $status === 'paid' ? null : 'Menunggu pembayaran',
-                'created_by' => $userIds[array_rand($userIds)],
+                'created_by' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -70,7 +70,7 @@ class MemberFinancialSeeder extends Seeder
                 'paid_at' => $status === 'aktif' ? $startDate : null,
                 'status' => $status,
                 'notes' => null,
-                'created_by' => $userIds[array_rand($userIds)],
+                'created_by' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

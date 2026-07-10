@@ -27,7 +27,7 @@ class InventoryTransactionSeeder extends Seeder
                 'result_condition' => $resultConditions[array_rand($resultConditions)],
                 'performed_by' => $performerNames[array_rand($performerNames)],
                 'notes' => 'Perawatan rutin item no. '.$i,
-                'created_by' => $userIds[array_rand($userIds)],
+                'created_by' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -54,11 +54,11 @@ class InventoryTransactionSeeder extends Seeder
                 'returned_at' => $status === 'dikembalikan' ? $borrowedAt->copy()->addDays(rand(1, 7)) : null,
                 'loan_status' => $status,
                 'notes' => $loanNotes[array_rand($loanNotes)],
-                'created_by' => $userIds[array_rand($userIds)],
+                'created_by' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
         }
-        DB::table('inventory_loans')->insert($loanRecords);
+        // DB::table('inventory_loans')->insert($loanRecords);
     }
 }

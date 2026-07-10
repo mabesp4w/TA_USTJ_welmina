@@ -52,7 +52,7 @@ class MemberSeeder extends Seeder
                 'address' => 'Jl. Contoh No. '.($i + 1).', Jakarta',
                 'member_status' => $statuses[array_rand($statuses)],
                 'joined_at' => now()->subDays(rand(0, 730)),
-                'created_by' => $creatorIds[array_rand($creatorIds)],
+                'created_by' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
