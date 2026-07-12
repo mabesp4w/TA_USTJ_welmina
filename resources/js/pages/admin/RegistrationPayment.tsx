@@ -8,6 +8,7 @@ import RegistrationPaymentListCard from "@/components/pages/admin/registrationPa
 import RegistrationPaymentForm from "@/components/pages/admin/registrationPayment/RegistrationPaymentForm";
 import RegistrationPaymentDetail from "@/components/pages/admin/registrationPayment/RegistrationPaymentDetail";
 import Pagination from "@/components/ui/Pagination";
+import FilterBar from "@/components/ui/FilterBar";
 import { show, destroy } from "@/routes/admin/registration-payment";
 import type { PaymentItem, MemberOption, PackageOption, DetailResponse, EditPaymentData } from "@/components/pages/admin/registrationPayment/types";
 import type { PaginatedData } from "@/types";
@@ -140,6 +141,29 @@ function RegistrationPaymentPage({
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
+
+                            <FilterBar
+                                filters={[
+                                    {
+                                        name: "package",
+                                        label: "Paket",
+                                        col: 4,
+                                        options: packages.map((p) => ({
+                                            value: String(p.id),
+                                            label: p.packageName,
+                                        })),
+                                    },
+                                    {
+                                        name: "status",
+                                        label: "Status",
+                                        col: 4,
+                                        options: [
+                                            { value: "paid", label: "Lunas" },
+                                            { value: "unpaid", label: "Belum Dibayar" },
+                                        ],
+                                    },
+                                ]}
+                            />
 
                             <RegistrationPaymentListCard
                                 payments={payments.data}

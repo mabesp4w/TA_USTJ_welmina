@@ -4,18 +4,23 @@ import { router } from "@inertiajs/react";
 import AdminLayout from "./AdminLayout";
 
 export default function GymEquipmentLayout({ children }: { children: React.ReactNode }) {
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState(() =>
+        new URLSearchParams(window.location.search).get("search") ?? "",
+    );
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
-    const navigate = useCallback((overrides?: Record<string, string | undefined>) => {
-        const params: Record<string, string | undefined> = {
-            search: search || undefined,
-            ...overrides,
-        };
+    const navigate = useCallback(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (search) {
+            params.set("search", search);
+        } else {
+            params.delete("search");
+        }
+        params.delete("page");
 
         router.get(
             window.location.pathname,
-            params,
+            Object.fromEntries(params),
             { preserveScroll: true, preserveState: true, replace: true },
         );
     }, [search]);

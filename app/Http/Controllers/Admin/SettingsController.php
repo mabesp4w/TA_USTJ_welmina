@@ -48,6 +48,12 @@ class SettingsController extends Controller
 
         $user->save();
 
-        return redirect()->route('admin.settings')->with('success', 'Pengaturan berhasil diperbarui!');
+        $routeName = $request->route()?->getName() === 'pengelola.settings.update'
+            ? 'pengelola.settings'
+            : ($request->route()?->getName() === 'pimpinan.settings.update'
+                ? 'pimpinan.settings'
+                : 'admin.settings');
+
+        return redirect()->route($routeName)->with('success', 'Pengaturan berhasil diperbarui!');
     }
 }

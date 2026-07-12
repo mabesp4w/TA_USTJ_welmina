@@ -26,6 +26,8 @@ class GymEquipmentController extends Controller
         $search = $request->query('search');
         $condition = $request->query('condition');
         $status = $request->query('status');
+        $categoryId = $request->query('category');
+        $supplierId = $request->query('supplier');
 
         $query = InventoryItem::with('category', 'supplier')
             ->whereHas('category', fn ($q) => $q->where('is_fitness_tools', true));
@@ -43,6 +45,14 @@ class GymEquipmentController extends Controller
 
         if ($status) {
             $query->where('item_status', $status);
+        }
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if ($supplierId) {
+            $query->where('supplier_id', $supplierId);
         }
 
         $items = $query
@@ -194,6 +204,10 @@ class GymEquipmentController extends Controller
             referenceTable: 'inventory_items',
             referenceId: $gymEquipment->id,
         );
+
+        if ($gymEquipment->image_path) {
+            Storage::disk('public')->delete($gymEquipment->image_path);
+        }
 
         $gymEquipment->delete();
 

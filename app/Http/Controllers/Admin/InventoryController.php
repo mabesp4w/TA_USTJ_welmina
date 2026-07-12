@@ -21,6 +21,8 @@ class InventoryController extends Controller
         $search = $request->query('search');
         $condition = $request->query('condition');
         $status = $request->query('status');
+        $categoryId = $request->query('category');
+        $supplierId = $request->query('supplier');
 
         $query = InventoryItem::with('category', 'supplier');
 
@@ -37,6 +39,14 @@ class InventoryController extends Controller
 
         if ($status) {
             $query->where('item_status', $status);
+        }
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if ($supplierId) {
+            $query->where('supplier_id', $supplierId);
         }
 
         $items = $query
@@ -185,6 +195,10 @@ class InventoryController extends Controller
             referenceTable: 'inventory_items',
             referenceId: $inventory->id,
         );
+
+        if ($inventory->image_path) {
+            Storage::disk('public')->delete($inventory->image_path);
+        }
 
         $inventory->delete();
 

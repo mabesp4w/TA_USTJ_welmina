@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
 import { type Control, Controller, type FieldValues, type Path } from "react-hook-form";
 import Select from "react-select";
+import { reactSelectStyles } from "./selectStyles";
 
 type SelectFieldProps<T extends FieldValues> = {
     label: string;
@@ -20,8 +22,11 @@ export default function SelectField<T extends FieldValues>({
     options,
     error,
 }: SelectFieldProps<T>) {
+    const wrapRef = useRef<HTMLLabelElement>(null);
+    const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
     return (
-        <label className="form-control w-full">
+        <label ref={wrapRef} className="form-control w-full">
             <div className="label pb-2">
                 <span className="label-text text-xs font-semibold uppercase tracking-wide text-base-content/70">
                     {label}
@@ -42,38 +47,12 @@ export default function SelectField<T extends FieldValues>({
                             value={options.find((o) => String(o.value) === String(field.value)) ?? null}
                             onChange={(option) => field.onChange(option?.value ?? "")}
                             onBlur={field.onBlur}
-                            styles={{
-                                control: (base) => ({
-                                    ...base,
-                                    border: "none",
-                                    boxShadow: "none",
-                                    minHeight: "unset",
-                                    background: "transparent",
-                                }),
-                                valueContainer: (base) => ({
-                                    ...base,
-                                    padding: 0,
-                                }),
-                                input: (base) => ({
-                                    ...base,
-                                    margin: 0,
-                                    padding: 0,
-                                }),
-                                indicatorSeparator: () => ({ display: "none" }),
-                                dropdownIndicator: (base) => ({
-                                    ...base,
-                                    padding: 0,
-                                    color: "var(--color-base-content/50)",
-                                }),
-                                menu: (base) => ({
-                                    ...base,
-                                    zIndex: 50,
-                                }),
-                                placeholder: (base) => ({
-                                    ...base,
-                                    fontSize: "0.875rem",
-                                }),
+                            onMenuOpen={() => {
+                                const dialog = wrapRef.current?.closest("dialog");
+                                setPortalTarget((dialog as HTMLElement) ?? document.body);
                             }}
+                            menuPortalTarget={portalTarget ?? undefined}
+                            styles={reactSelectStyles}
                         />
                     )}
                 />

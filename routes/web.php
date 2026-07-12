@@ -138,6 +138,9 @@ Route::middleware('auth')->group(function () {
         Route::get('pengelola/report/harian', [ReportController::class, 'harian'])->name('pengelola.report.harian');
         Route::get('pengelola/report/harian/pdf', [ReportController::class, 'harianPdf'])->name('pengelola.report.harian.pdf');
         Route::get('pengelola/report/harian/excel', [ReportController::class, 'harianExcel'])->name('pengelola.report.harian.excel');
+
+        Route::get('pengelola/settings', [SettingsController::class, 'index'])->name('pengelola.settings');
+        Route::put('pengelola/settings', [SettingsController::class, 'update'])->name('pengelola.settings.update');
     });
 
     Route::middleware('role:pimpinan')->group(function () {
@@ -151,6 +154,9 @@ Route::middleware('auth')->group(function () {
         Route::get('pimpinan/report/harian', [ReportController::class, 'harian'])->name('pimpinan.report.harian');
         Route::get('pimpinan/report/harian/pdf', [ReportController::class, 'harianPdf'])->name('pimpinan.report.harian.pdf');
         Route::get('pimpinan/report/harian/excel', [ReportController::class, 'harianExcel'])->name('pimpinan.report.harian.excel');
+
+        Route::get('pimpinan/settings', [SettingsController::class, 'index'])->name('pimpinan.settings');
+        Route::put('pimpinan/settings', [SettingsController::class, 'update'])->name('pimpinan.settings.update');
     });
 
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');

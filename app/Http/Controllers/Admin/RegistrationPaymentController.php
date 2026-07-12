@@ -23,6 +23,7 @@ class RegistrationPaymentController extends Controller
     {
         $search = $request->query('search');
         $status = $request->query('status');
+        $packageId = $request->query('package');
 
         $query = RegistrationPayment::with('member', 'package', 'creator');
 
@@ -35,6 +36,10 @@ class RegistrationPaymentController extends Controller
 
         if ($status) {
             $query->where('payment_status', $status);
+        }
+
+        if ($packageId) {
+            $query->where('package_id', $packageId);
         }
 
         $payments = $query

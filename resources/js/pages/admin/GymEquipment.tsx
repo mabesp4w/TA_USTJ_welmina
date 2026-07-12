@@ -7,6 +7,7 @@ import Modal from "@/components/ui/Modal";
 import StatCard from "@/components/pages/admin/inventory/StatCard";
 import InventoryForm from "@/components/pages/admin/inventory/InventoryForm";
 import InventoryDetail from "@/components/pages/admin/inventory/InventoryDetail";
+import InventoryFilter from "@/components/pages/admin/inventory/InventoryFilter";
 import Pagination from "@/components/ui/Pagination";
 import { show, destroy, store as gymStore, update as gymUpdate } from "@/routes/admin/gym-equipment";
 import type { InventoryItem, DetailResponse, Stats, CategoryOption, SupplierOption } from "@/components/pages/admin/inventory/types";
@@ -115,6 +116,8 @@ function GymEquipmentPage({
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
+
+                            <InventoryFilter categories={categories} suppliers={suppliers} />
 
                             <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
                                 <div className="card-body p-4 md:p-5">

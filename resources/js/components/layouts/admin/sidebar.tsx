@@ -6,6 +6,7 @@ import {
     gymEquipment as pengelolaGymEquipment,
     inventory as pengelolaInventory,
     maintenanceLogs as pengelolaMaintenanceLogs,
+    settings as pengelolaSettings,
     supplier as pengelolaSupplier,
 } from '@/routes/pengelola';
 import {
@@ -13,7 +14,7 @@ import {
     keuangan as pengelolaReportKeuangan,
     harian as pengelolaReportHarian,
 } from '@/routes/pengelola/report';
-import { dashboard as pimpinanDashboard } from '@/routes/pimpinan';
+import { dashboard as pimpinanDashboard, settings as pimpinanSettings } from '@/routes/pimpinan';
 import {
     barang as pimpinanReportBarang,
     keuangan as pimpinanReportKeuangan,
@@ -128,6 +129,12 @@ export const pengelolaMenuSections: MenuSection[] = [
             { label: "Laporan Harian", icon: CalendarDays, href: pengelolaReportHarian.url() },
         ],
     },
+    {
+        title: "SISTEM",
+        items: [
+            { label: "Pengaturan", icon: Settings, href: pengelolaSettings.url() },
+        ],
+    },
 ];
 
 export const pimpinanMenuSections: MenuSection[] = [
@@ -143,6 +150,12 @@ export const pimpinanMenuSections: MenuSection[] = [
             { label: "Laporan Barang", icon: ClipboardList, href: pimpinanReportBarang.url() },
             { label: "Laporan Keuangan", icon: DollarSign, href: pimpinanReportKeuangan.url() },
             { label: "Laporan Harian", icon: CalendarDays, href: pimpinanReportHarian.url() },
+        ],
+    },
+    {
+        title: "SISTEM",
+        items: [
+            { label: "Pengaturan", icon: Settings, href: pimpinanSettings.url() },
         ],
     },
 ];

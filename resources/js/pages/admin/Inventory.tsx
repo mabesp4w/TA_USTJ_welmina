@@ -8,6 +8,7 @@ import InventoryListCard from "@/components/pages/admin/inventory/InventoryListC
 import InventoryForm from "@/components/pages/admin/inventory/InventoryForm";
 import InventoryDetail from "@/components/pages/admin/inventory/InventoryDetail";
 import Pagination from "@/components/ui/Pagination";
+import InventoryFilter from "@/components/pages/admin/inventory/InventoryFilter";
 import { show, destroy } from "@/routes/admin/inventory";
 import type { InventoryItem, DetailResponse, Stats, CategoryOption, SupplierOption } from "@/components/pages/admin/inventory/types";
 import type { PaginatedData } from "@/types";
@@ -116,6 +117,8 @@ function InventoryPage({
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
+
+                            <InventoryFilter categories={categories} suppliers={suppliers} />
 
                             <InventoryListCard
                                 items={items.data}
