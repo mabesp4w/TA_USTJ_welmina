@@ -13,6 +13,12 @@ import {
     keuangan as pengelolaReportKeuangan,
     harian as pengelolaReportHarian,
 } from '@/routes/pengelola/report';
+import { dashboard as pimpinanDashboard } from '@/routes/pimpinan';
+import {
+    barang as pimpinanReportBarang,
+    keuangan as pimpinanReportKeuangan,
+    harian as pimpinanReportHarian,
+} from '@/routes/pimpinan/report';
 import {
     Bell,
     Building2,
@@ -120,6 +126,23 @@ export const pengelolaMenuSections: MenuSection[] = [
             { label: "Laporan Barang", icon: ClipboardList, href: pengelolaReportBarang.url() },
             { label: "Laporan Keuangan", icon: DollarSign, href: pengelolaReportKeuangan.url() },
             { label: "Laporan Harian", icon: CalendarDays, href: pengelolaReportHarian.url() },
+        ],
+    },
+];
+
+export const pimpinanMenuSections: MenuSection[] = [
+    {
+        title: "UTAMA",
+        items: [
+            { label: "Dashboard", icon: LayoutDashboard, href: pimpinanDashboard.url() },
+        ],
+    },
+    {
+        title: "CETAK LAPORAN",
+        items: [
+            { label: "Laporan Barang", icon: ClipboardList, href: pimpinanReportBarang.url() },
+            { label: "Laporan Keuangan", icon: DollarSign, href: pimpinanReportKeuangan.url() },
+            { label: "Laporan Harian", icon: CalendarDays, href: pimpinanReportHarian.url() },
         ],
     },
 ];

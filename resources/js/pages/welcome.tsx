@@ -13,7 +13,7 @@ import {
     Sparkles,
 } from "lucide-react";
 
-export default function Welcome() {
+export default function Welcome({ stats }: { stats: { total: number; baik: number; perluTindakan: number } }) {
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         username: '',
@@ -74,17 +74,17 @@ export default function Welcome() {
 
                             <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4" data-aos="fade-up" data-aos-delay="400">
                                 <div className="bg-primary-content/10 backdrop-blur rounded-2xl p-4 border border-primary-content/10">
-                                    <p className="text-2xl font-bold">247</p>
+                                    <p className="text-2xl font-bold">{stats.total}</p>
                                     <p className="text-sm opacity-80">Total Inventaris</p>
                                 </div>
 
                                 <div className="bg-primary-content/10 backdrop-blur rounded-2xl p-4 border border-primary-content/10">
-                                    <p className="text-2xl font-bold">198</p>
+                                    <p className="text-2xl font-bold">{stats.baik}</p>
                                     <p className="text-sm opacity-80">Kondisi Baik</p>
                                 </div>
 
                                 <div className="bg-primary-content/10 backdrop-blur rounded-2xl p-4 border border-primary-content/10">
-                                    <p className="text-2xl font-bold">15</p>
+                                    <p className="text-2xl font-bold">{stats.perluTindakan}</p>
                                     <p className="text-sm opacity-80">Perlu Tindakan</p>
                                 </div>
                             </div>

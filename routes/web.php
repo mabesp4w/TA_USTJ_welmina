@@ -15,10 +15,21 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Models\InventoryItem;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::middleware('guest')->group(function () {
-    Route::inertia('/', 'welcome')->name('home');
+    Route::get('/', function () {
+        $total = InventoryItem::count();
+        $baik = InventoryItem::where('item_condition', 'baik')->count();
+        $perluTindakan = InventoryItem::where('item_condition', 'perlu_perawatan')->count()
+            + InventoryItem::where('item_condition', 'rusak')->count();
+
+        return Inertia::render('welcome', [
+            'stats' => compact('total', 'baik', 'perluTindakan'),
+        ]);
+    })->name('home');
 
     Route::get('login', fn () => redirect(route('home')))->name('login');
     Route::post('login', [LoginController::class, 'store']);
@@ -130,7 +141,16 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:pimpinan')->group(function () {
-        Route::inertia('pimpinan/dashboard', 'pimpinan/Dashboard')->name('pimpinan.dashboard');
+        Route::get('pimpinan/dashboard', [DashboardController::class, 'index'])->name('pimpinan.dashboard');
+        Route::get('pimpinan/report/barang', [ReportController::class, 'barang'])->name('pimpinan.report.barang');
+        Route::get('pimpinan/report/barang/pdf', [ReportController::class, 'barangPdf'])->name('pimpinan.report.barang.pdf');
+        Route::get('pimpinan/report/barang/excel', [ReportController::class, 'barangExcel'])->name('pimpinan.report.barang.excel');
+        Route::get('pimpinan/report/keuangan', [ReportController::class, 'keuangan'])->name('pimpinan.report.keuangan');
+        Route::get('pimpinan/report/keuangan/pdf', [ReportController::class, 'keuanganPdf'])->name('pimpinan.report.keuangan.pdf');
+        Route::get('pimpinan/report/keuangan/excel', [ReportController::class, 'keuanganExcel'])->name('pimpinan.report.keuangan.excel');
+        Route::get('pimpinan/report/harian', [ReportController::class, 'harian'])->name('pimpinan.report.harian');
+        Route::get('pimpinan/report/harian/pdf', [ReportController::class, 'harianPdf'])->name('pimpinan.report.harian.pdf');
+        Route::get('pimpinan/report/harian/excel', [ReportController::class, 'harianExcel'])->name('pimpinan.report.harian.excel');
     });
 
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');

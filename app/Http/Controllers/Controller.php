@@ -13,6 +13,8 @@ abstract class Controller
 
         if ($routeName && str_starts_with($routeName, 'pengelola.')) {
             $page = str_replace('admin/', 'pengelola/', $page);
+        } elseif ($routeName && str_starts_with($routeName, 'pimpinan.')) {
+            $page = str_replace('admin/', 'pimpinan/', $page);
         }
 
         return Inertia::render($page, $data);
