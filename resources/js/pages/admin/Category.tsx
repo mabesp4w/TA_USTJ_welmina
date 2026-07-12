@@ -7,14 +7,16 @@ import StatCard from "@/components/pages/admin/category/StatCard";
 import CategoryListCard from "@/components/pages/admin/category/CategoryListCard";
 import CategoryForm from "@/components/pages/admin/category/CategoryForm";
 import CategoryDetail from "@/components/pages/admin/category/CategoryDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/category";
 import type { CategoryItem, DetailResponse, Stats } from "@/components/pages/admin/category/types";
+import type { PaginatedData } from "@/types";
 
 function CategoryPage({
     categories,
     stats,
 }: {
-    categories: CategoryItem[];
+    categories: PaginatedData<CategoryItem>;
     stats: Stats;
 }) {
     const [selectedCategory, setSelectedCategory] = useState<CategoryItem | null>(null);
@@ -104,17 +106,24 @@ function CategoryPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-aos="flip-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <CategoryListCard
-                                categories={categories}
+                                categories={categories.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={categories.links}
+                                from={categories.from}
+                                to={categories.to}
+                                total={categories.total}
                             />
                         </div>
                     </div>

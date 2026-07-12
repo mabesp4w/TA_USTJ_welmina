@@ -24,9 +24,8 @@ class NotificationController extends Controller
 
         $notifications = $query
             ->orderByDesc('created_at')
-            ->limit(100)
-            ->get()
-            ->map(fn (Notification $n) => [
+            ->paginate(10)
+            ->through(fn (Notification $n) => [
                 'id' => $n->id,
                 'title' => $n->title,
                 'message' => $n->message,

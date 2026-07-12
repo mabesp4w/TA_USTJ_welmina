@@ -7,10 +7,12 @@ import StatCard from "@/components/pages/admin/gymFee/StatCard";
 import GymFeeListCard from "@/components/pages/admin/gymFee/GymFeeListCard";
 import GymFeeForm from "@/components/pages/admin/gymFee/GymFeeForm";
 import GymFeeDetail from "@/components/pages/admin/gymFee/GymFeeDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/gym-fee";
 import type { PackageItem, DetailResponse, Stats } from "@/components/pages/admin/gymFee/types";
+import type { PaginatedData } from "@/types";
 
-function GymFeePage({ packages, stats }: { packages: PackageItem[]; stats: Stats }) {
+function GymFeePage({ packages, stats }: { packages: PaginatedData<PackageItem>; stats: Stats }) {
     const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
     const [editData, setEditData] = useState<DetailResponse | null>(null);
     const [editLoading, setEditLoading] = useState(false);
@@ -87,9 +89,18 @@ function GymFeePage({ packages, stats }: { packages: PackageItem[]; stats: Stats
     };
 
     const statCards = [
-        { title: "Total Paket", value: String(stats.total), subtitle: "Seluruh paket" },
-        { title: "Aktif", value: String(stats.active), subtitle: "Paket aktif" },
-        { title: "Nonaktif", value: String(stats.inactive), subtitle: "Paket nonaktif" },
+        {
+            title: "Pendapatan Iuran",
+            value: `Rp ${stats.revenue.toLocaleString("id-ID")}`,
+            subtitle: "Iuran sudah dibayar",
+        },
+        { title: "Sudah Bayar", value: String(stats.paid), subtitle: "Iuran lunas" },
+        { title: "Belum Bayar", value: String(stats.unpaid), subtitle: "Menunggu pembayaran" },
+        {
+            title: "Tunggakan",
+            value: `Rp ${stats.arrears.toLocaleString("id-ID")}`,
+            subtitle: "Iuran belum dibayar",
+        },
     ];
 
     return (
@@ -98,17 +109,24 @@ function GymFeePage({ packages, stats }: { packages: PackageItem[]; stats: Stats
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-right">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <GymFeeListCard
-                                packages={packages}
+                                packages={packages.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={packages.links}
+                                from={packages.from}
+                                to={packages.to}
+                                total={packages.total}
                             />
                         </div>
                     </div>

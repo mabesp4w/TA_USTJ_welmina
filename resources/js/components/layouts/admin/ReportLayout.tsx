@@ -1,3 +1,4 @@
+import React from "react";
 import { Printer, Download } from "lucide-react";
 import { router, usePage } from "@inertiajs/react";
 import toast from "react-hot-toast";
@@ -11,6 +12,15 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
         { key: "keuangan", label: "Laporan Keuangan" },
         { key: "harian", label: "Laporan Harian" },
     ];
+
+    const handleTabChange = (key: string) => {
+        if (key === tab) return;
+        router.get(
+            report.url(),
+            { tab: key },
+            { preserveScroll: true, preserveState: true, replace: true },
+        );
+    };
 
     return (
         <AdminLayout
@@ -37,27 +47,24 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
             }
         >
             <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
-                <div role="tablist" className="tabs tabs-bordered mb-6">
+                <div className="tabs tabs-lift" data-aos="fade-up">
                     {tabs.map((t) => (
-                        <a
-                            key={t.key}
-                            role="tab"
-                            className={`tab ${tab === t.key ? "tab-active" : ""}`}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                router.get(
-                                    report.url(),
-                                    { tab: t.key },
-                                    { preserveScroll: true, preserveState: true, replace: true },
-                                );
-                            }}
-                        >
-                            {t.label}
-                        </a>
+                        <React.Fragment key={t.key}>
+                            <label className="tab">
+                                <input
+                                    type="radio"
+                                    name="report_tabs"
+                                    defaultChecked={tab === t.key}
+                                    onChange={() => handleTabChange(t.key)}
+                                />
+                                {t.label}
+                            </label>
+                            <div className="tab-content bg-base-100 border-base-300 p-6">
+                                {tab === t.key ? children : null}
+                            </div>
+                        </React.Fragment>
                     ))}
                 </div>
-
-                {children}
             </div>
         </AdminLayout>
     );

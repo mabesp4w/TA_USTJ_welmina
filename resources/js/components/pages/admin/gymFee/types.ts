@@ -26,7 +26,8 @@ export type DetailResponse = {
 };
 
 export type Stats = {
-    total: number;
-    active: number;
-    inactive: number;
+    revenue: number;
+    paid: number;
+    unpaid: number;
+    arrears: number;
 };

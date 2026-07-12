@@ -6,6 +6,7 @@ import { router } from "@inertiajs/react";
 import toast from "react-hot-toast";
 import { User, AtSign, Key, Shield, Mail } from "lucide-react";
 import InputField from "@/components/ui/InputField";
+import PasswordField from "@/components/ui/PasswordField";
 import SelectField from "@/components/ui/SelectField";
 import { store, update } from "@/routes/admin/user";
 import type { DetailResponse } from "./types";
@@ -145,11 +146,10 @@ export default function UserForm({
                 </div>
 
                 <div className="md:col-span-4">
-                    <InputField
+                    <PasswordField
                         label={isEdit ? "Password Baru (Kosongkan jika tidak diubah)" : "Password"}
                         placeholder="Minimal 5 karakter"
                         icon={<Key size={16} />}
-                        type="password"
                         registration={register("password")}
                         error={errors.password?.message}
                     />

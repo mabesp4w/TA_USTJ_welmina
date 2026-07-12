@@ -1,4 +1,4 @@
-import { MapPin, Building2 } from "lucide-react";
+import { MapPin, Building2, ImageOff } from "lucide-react";
 import type { DetailResponse } from "./types";
 
 const conditionLabel: Record<string, string> = {
@@ -23,6 +23,18 @@ export default function InventoryDetail({ data }: { data: DetailResponse | null 
 
     return (
         <div className="space-y-5">
+            {data.imagePath ? (
+                <img
+                    src={data.imagePath}
+                    alt={data.itemName}
+                    className="h-48 w-full rounded-lg object-cover"
+                />
+            ) : (
+                <div className="flex h-48 items-center justify-center rounded-lg bg-base-300/30">
+                    <ImageOff size={40} className="text-base-content/30" />
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">

@@ -9,7 +9,7 @@ import { Package, Barcode, Layers, Hash, MapPin, Building2, CalendarDays, FileTe
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
 import DatePickerField from "@/components/ui/DatePickerField";
-import { store, update } from "@/routes/admin/inventory";
+import { store as inventoryStore, update as inventoryUpdate } from "@/routes/admin/inventory";
 import type { DetailResponse, CategoryOption, SupplierOption } from "./types";
 
 const schema = yup.object({
@@ -33,12 +33,16 @@ export default function InventoryForm({
     inventory,
     categories,
     suppliers,
+    storeUrl,
+    updateUrl,
 }: {
     onSuccess?: () => void;
     onCancel?: () => void;
     inventory?: DetailResponse | null;
     categories: CategoryOption[];
     suppliers: SupplierOption[];
+    storeUrl?: string;
+    updateUrl?: (id: number) => string;
 }) {
     const isEdit = Boolean(inventory);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,7 +121,8 @@ export default function InventoryForm({
 
         if (isEdit && inventory) {
             formData.append("_method", "PUT");
-            router.post(update.url({ inventory: inventory.id }), formData, {
+            const url = updateUrl ? updateUrl(inventory.id) : inventoryUpdate.url({ inventory: inventory.id });
+            router.post(url, formData, {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success("Data inventaris berhasil diperbarui!");
@@ -128,7 +133,7 @@ export default function InventoryForm({
                 },
             });
         } else {
-            router.post(store.url(), formData, {
+            router.post(storeUrl ?? inventoryStore.url(), formData, {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success("Data inventaris berhasil disimpan!");

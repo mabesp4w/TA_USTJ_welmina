@@ -13,7 +13,7 @@ class StoreCategoryRequest extends FormRequest
 
     public function rules(): array
     {
-        $categoryId = $this->route('gymEquipment')?->getKey();
+        $categoryId = $this->route('category')?->getKey();
 
         return [
             'categoryName' => [

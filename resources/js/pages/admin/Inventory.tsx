@@ -7,8 +7,10 @@ import StatCard from "@/components/pages/admin/inventory/StatCard";
 import InventoryListCard from "@/components/pages/admin/inventory/InventoryListCard";
 import InventoryForm from "@/components/pages/admin/inventory/InventoryForm";
 import InventoryDetail from "@/components/pages/admin/inventory/InventoryDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/inventory";
 import type { InventoryItem, DetailResponse, Stats, CategoryOption, SupplierOption } from "@/components/pages/admin/inventory/types";
+import type { PaginatedData } from "@/types";
 
 function InventoryPage({
     items,
@@ -16,7 +18,7 @@ function InventoryPage({
     categories,
     suppliers,
 }: {
-    items: InventoryItem[];
+    items: PaginatedData<InventoryItem>;
     stats: Stats;
     categories: CategoryOption[];
     suppliers: SupplierOption[];
@@ -109,17 +111,24 @@ function InventoryPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <InventoryListCard
-                                items={items}
+                                items={items.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={items.links}
+                                from={items.from}
+                                to={items.to}
+                                total={items.total}
                             />
                         </div>
                     </div>

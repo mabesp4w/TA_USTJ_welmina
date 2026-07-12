@@ -7,8 +7,10 @@ import StatCard from "@/components/pages/admin/procurement/StatCard";
 import ProcurementListCard from "@/components/pages/admin/procurement/ProcurementListCard";
 import ProcurementForm from "@/components/pages/admin/procurement/ProcurementForm";
 import ProcurementDetail from "@/components/pages/admin/procurement/ProcurementDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/procurement";
 import type { ProcurementItem, DetailResponse, Stats, ItemOption, SupplierOption } from "@/components/pages/admin/procurement/types";
+import type { PaginatedData } from "@/types";
 
 function ProcurementPage({
     procurements,
@@ -16,7 +18,7 @@ function ProcurementPage({
     items,
     suppliers,
 }: {
-    procurements: ProcurementItem[];
+    procurements: PaginatedData<ProcurementItem>;
     stats: Stats;
     items: ItemOption[];
     suppliers: SupplierOption[];
@@ -108,17 +110,24 @@ function ProcurementPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-aos="fade-left">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <ProcurementListCard
-                                procurements={procurements}
+                                procurements={procurements.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={procurements.links}
+                                from={procurements.from}
+                                to={procurements.to}
+                                total={procurements.total}
                             />
                         </div>
                     </div>

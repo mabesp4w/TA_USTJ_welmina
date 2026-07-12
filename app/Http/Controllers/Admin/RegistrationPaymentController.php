@@ -13,6 +13,7 @@ use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,8 +39,8 @@ class RegistrationPaymentController extends Controller
 
         $payments = $query
             ->latest()
-            ->get()
-            ->map(function (RegistrationPayment $rp) {
+            ->paginate(10)
+            ->through(function (RegistrationPayment $rp) {
                 $ms = MemberMembership::where('member_id', $rp->member_id)
                     ->where('package_id', $rp->package_id)
                     ->latest()
@@ -64,10 +65,24 @@ class RegistrationPaymentController extends Controller
                 ];
             });
 
+        $revenue = (int) RegistrationPayment::where('payment_status', 'paid')
+            ->sum(DB::raw('registration_fee + admin_fee'));
+
+        $newThisMonth = RegistrationPayment::whereYear('registration_date', now()->year)
+            ->whereMonth('registration_date', now()->month)
+            ->count();
+
+        $topPackage = RegistrationPayment::selectRaw('package_id, count(*) as total')
+            ->groupBy('package_id')
+            ->orderByDesc('total')
+            ->with('package:id,package_name')
+            ->first();
+
         $stats = [
-            'total' => RegistrationPayment::count(),
-            'paid' => RegistrationPayment::where('payment_status', 'paid')->count(),
-            'unpaid' => RegistrationPayment::where('payment_status', 'unpaid')->count(),
+            'revenue' => $revenue,
+            'newThisMonth' => $newThisMonth,
+            'topPackageName' => $topPackage?->package?->package_name ?? '-',
+            'topPackageCount' => (int) ($topPackage?->total ?? 0),
         ];
 
         $members = Member::orderBy('full_name')

@@ -7,14 +7,16 @@ import StatCard from "@/components/pages/admin/supplier/StatCard";
 import SupplierListCard from "@/components/pages/admin/supplier/SupplierListCard";
 import SupplierForm from "@/components/pages/admin/supplier/SupplierForm";
 import SupplierDetail from "@/components/pages/admin/supplier/SupplierDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/supplier";
 import type { SupplierItem, DetailResponse, Stats } from "@/components/pages/admin/supplier/types";
+import type { PaginatedData } from "@/types";
 
 function SupplierPage({
     suppliers,
     stats,
 }: {
-    suppliers: SupplierItem[];
+    suppliers: PaginatedData<SupplierItem>;
     stats: Stats;
 }) {
     const [selectedSupplier, setSelectedSupplier] = useState<SupplierItem | null>(null);
@@ -103,17 +105,24 @@ function SupplierPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" data-aos="fade-left">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <SupplierListCard
-                                suppliers={suppliers}
+                                suppliers={suppliers.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={suppliers.links}
+                                from={suppliers.from}
+                                to={suppliers.to}
+                                total={suppliers.total}
                             />
                         </div>
                     </div>

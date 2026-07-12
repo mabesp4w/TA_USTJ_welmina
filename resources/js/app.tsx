@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import { ShootingStarsGrid } from '@/components/ui/ShootingStarsGrid';
+import AosProvider from '@/components/ui/AosProvider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -17,16 +18,18 @@ createInertiaApp({
     },
     setup({ el, App, props }) {
         const content = (
-            <ShootingStarsGrid fullScreen starCount={90} shootingStarCount={8} interactive>
-                <App {...props} />
-                <Toaster
-                    position="top-right"
-                    toastOptions={{
-                        duration: 4000,
-                        className: "border border-base-300 bg-base-100 shadow-lg",
-                    }}
-                />
-            </ShootingStarsGrid>
+            <AosProvider>
+                <ShootingStarsGrid fullScreen starCount={90} shootingStarCount={8} interactive>
+                    <App {...props} />
+                    <Toaster
+                        position="top-right"
+                        toastOptions={{
+                            duration: 4000,
+                            className: "border border-base-300 bg-base-100 shadow-lg",
+                        }}
+                    />
+                </ShootingStarsGrid>
+            </AosProvider>
         );
 
         if (typeof document !== "undefined") {

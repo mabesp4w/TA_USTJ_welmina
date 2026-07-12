@@ -7,8 +7,10 @@ import Modal from "@/components/ui/Modal";
 import StatCard from "@/components/pages/admin/inventory/StatCard";
 import InventoryForm from "@/components/pages/admin/inventory/InventoryForm";
 import InventoryDetail from "@/components/pages/admin/inventory/InventoryDetail";
-import { show, destroy } from "@/routes/admin/gym-equipment";
+import Pagination from "@/components/ui/Pagination";
+import { show, destroy, store as gymStore, update as gymUpdate } from "@/routes/admin/gym-equipment";
 import type { InventoryItem, DetailResponse, Stats, CategoryOption, SupplierOption } from "@/components/pages/admin/inventory/types";
+import type { PaginatedData } from "@/types";
 
 function GymEquipmentPage({
     items,
@@ -16,7 +18,7 @@ function GymEquipmentPage({
     categories,
     suppliers,
 }: {
-    items: InventoryItem[];
+    items: PaginatedData<InventoryItem>;
     stats: Stats;
     categories: CategoryOption[];
     suppliers: SupplierOption[];
@@ -108,7 +110,7 @@ function GymEquipmentPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
@@ -118,12 +120,12 @@ function GymEquipmentPage({
                                 <div className="card-body p-4 md:p-5">
                                     <h2 className="text-lg font-bold text-base-content">Daftar Peralatan Fitness</h2>
                                     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                        {items.length === 0 ? (
+                                        {items.data.length === 0 ? (
                                             <div className="col-span-full py-12 text-center text-sm text-base-content/50">
                                                 Belum ada peralatan fitness
                                             </div>
                                         ) : (
-                                            items.map((item) => (
+                                            items.data.map((item) => (
                                                 <div
                                                     key={item.id}
                                                     className="rounded-box border border-base-300 bg-base-200/40 overflow-hidden"
@@ -192,6 +194,13 @@ function GymEquipmentPage({
                                     </div>
                                 </div>
                             </div>
+
+                            <Pagination
+                                links={items.links}
+                                from={items.from}
+                                to={items.to}
+                                total={items.total}
+                            />
                         </div>
                     </div>
                 </div>
@@ -203,6 +212,8 @@ function GymEquipmentPage({
                     suppliers={suppliers}
                     onCancel={closeForm}
                     onSuccess={closeForm}
+                    storeUrl={gymStore.url()}
+                    updateUrl={(id) => gymUpdate.url({ gymEquipment: id })}
                 />
             </Modal>
 
@@ -219,6 +230,8 @@ function GymEquipmentPage({
                             onCancel={closeEditForm}
                             onSuccess={closeEditForm}
                             inventory={editData}
+                            storeUrl={gymStore.url()}
+                            updateUrl={(id) => gymUpdate.url({ gymEquipment: id })}
                         />
                     )
                 )}

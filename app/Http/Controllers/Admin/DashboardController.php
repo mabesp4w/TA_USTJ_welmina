@@ -8,7 +8,6 @@ use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\MaintenanceLog;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
@@ -78,7 +77,7 @@ class DashboardController extends Controller
                 'updated' => $item->updated_at->diffForHumans(),
             ]);
 
-        return Inertia::render('admin/Dashboard', [
+        return $this->inertia('admin/Dashboard', [
             'stats' => [
                 ['title' => 'Total Inventaris', 'value' => (string) $total, 'subtitle' => 'Item baru '.$barangBaru],
                 ['title' => 'Kondisi Bagus', 'value' => $total > 0 ? round(($baik / $total) * 100).'%' : '0%', 'subtitle' => $baik.'/'.$total.' item baik'],

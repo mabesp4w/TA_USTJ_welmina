@@ -49,7 +49,7 @@ export default function Modal({ id, title, children, size = "md", open, onClose 
 
     return (
         <dialog id={id} ref={ref} className="modal">
-            <div className={`modal-box ${sizeClass[size]}`}>
+            <div className={`modal-box overflow-visible ${sizeClass[size]}`}>
                 <button
                     type="button"
                     onClick={close}

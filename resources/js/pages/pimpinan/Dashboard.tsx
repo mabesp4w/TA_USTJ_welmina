@@ -1,7 +1,7 @@
 export default function PimpinanDashboard() {
     return (
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
-            <div className="card border border-base-300 bg-base-100 shadow-sm">
+            <div className="card border border-base-300 bg-base-100 shadow-sm" data-aos="fade-up">
                 <div className="card-body p-4 md:p-6">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/50">

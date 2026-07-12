@@ -34,7 +34,7 @@ export default function Welcome() {
             <div className="min-h-screen">
                 <div className="hero min-h-screen px-4 py-8">
                     <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 shadow-2xl rounded-3xl overflow-hidden">
-                        <div className="relative hidden lg:flex flex-col justify-between text-gray-300 p-10">
+                        <div className="relative hidden lg:flex flex-col justify-between text-gray-300 p-10" data-aos="fade-right" data-aos-duration="800">
                             <div className="absolute inset-0 opacity-10">
                                 <div className="absolute top-10 left-10 w-24 h-24 rounded-full border border-primary-content"></div>
                                 <div className="absolute bottom-16 right-16 w-32 h-32 rounded-full border border-primary-content"></div>
@@ -72,7 +72,7 @@ export default function Welcome() {
                                 </div>
                             </div>
 
-                            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4" data-aos="fade-up" data-aos-delay="400">
                                 <div className="bg-primary-content/10 backdrop-blur rounded-2xl p-4 border border-primary-content/10">
                                     <p className="text-2xl font-bold">247</p>
                                     <p className="text-sm opacity-80">Total Inventaris</p>
@@ -90,7 +90,7 @@ export default function Welcome() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-base-100">
+                        <div className="flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-base-100" data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
                             <div className="w-full max-w-md">
                                 <div className="text-center lg:text-left mb-8">
                                     <div className="lg:hidden flex justify-center mb-4">

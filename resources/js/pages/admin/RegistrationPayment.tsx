@@ -7,8 +7,10 @@ import StatCard from "@/components/pages/admin/registrationPayment/StatCard";
 import RegistrationPaymentListCard from "@/components/pages/admin/registrationPayment/RegistrationPaymentListCard";
 import RegistrationPaymentForm from "@/components/pages/admin/registrationPayment/RegistrationPaymentForm";
 import RegistrationPaymentDetail from "@/components/pages/admin/registrationPayment/RegistrationPaymentDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/registration-payment";
 import type { PaymentItem, MemberOption, PackageOption, DetailResponse, EditPaymentData } from "@/components/pages/admin/registrationPayment/types";
+import type { PaginatedData } from "@/types";
 
 function RegistrationPaymentPage({
     payments,
@@ -16,8 +18,8 @@ function RegistrationPaymentPage({
     members,
     packages,
 }: {
-    payments: PaymentItem[];
-    stats: { total: number; paid: number; unpaid: number };
+    payments: PaginatedData<PaymentItem>;
+    stats: { revenue: number; newThisMonth: number; topPackageName: string; topPackageCount: number };
     members: MemberOption[];
     packages: PackageOption[];
 }) {
@@ -110,9 +112,21 @@ function RegistrationPaymentPage({
     };
 
     const statCards = [
-        { title: "Total Transaksi", value: String(stats.total), subtitle: "Seluruh transaksi" },
-        { title: "Lunas", value: String(stats.paid), subtitle: "Pembayaran lunas" },
-        { title: "Belum Dibayar", value: String(stats.unpaid), subtitle: "Menunggu pembayaran" },
+        {
+            title: "Pendapatan Pendaftaran",
+            value: `Rp ${stats.revenue.toLocaleString("id-ID")}`,
+            subtitle: "Total pembayaran lunas",
+        },
+        {
+            title: "Pendaftaran Baru",
+            value: String(stats.newThisMonth),
+            subtitle: "Bulan ini",
+        },
+        {
+            title: "Paket Terpopuler",
+            value: stats.topPackageName,
+            subtitle: `${stats.topPackageCount} pendaftaran`,
+        },
     ];
 
     return (
@@ -128,10 +142,17 @@ function RegistrationPaymentPage({
                             </div>
 
                             <RegistrationPaymentListCard
-                                payments={payments}
+                                payments={payments.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={payments.links}
+                                from={payments.from}
+                                to={payments.to}
+                                total={payments.total}
                             />
                         </div>
                     </div>

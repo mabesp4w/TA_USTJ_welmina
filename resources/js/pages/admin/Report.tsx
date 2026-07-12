@@ -5,7 +5,7 @@ function InventoryReport({ data }: { data: any }) {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-up">
                 <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
                     <div className="card-body p-4 md:p-5">
                         <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Total Barang</p>
@@ -110,7 +110,7 @@ function InventoryReport({ data }: { data: any }) {
 function FinancialReport({ data }: { data: any }) {
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-right">
                 <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
                     <div className="card-body p-4 md:p-5">
                         <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Total Pengadaan</p>
@@ -176,7 +176,7 @@ function FinancialReport({ data }: { data: any }) {
 function DailyReport({ data }: { data: any }) {
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-left">
                 <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
                     <div className="card-body p-4 md:p-5">
                         <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Pengadaan Hari Ini</p>
@@ -196,6 +196,13 @@ function DailyReport({ data }: { data: any }) {
                         <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Peminjaman Aktif</p>
                         <p className="mt-1 text-2xl font-bold">{data.activeLoans}</p>
                         <p className="mt-0.5 text-xs text-base-content/50">Barang dipinjam</p>
+                    </div>
+                </div>
+                <div className="card border border-base-300 bg-base-100/70 backdrop-blur-sm shadow-sm">
+                    <div className="card-body p-4 md:p-5">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Pengadaan Terbaru</p>
+                        <p className="mt-1 text-2xl font-bold">{data.recentProcurements.length}</p>
+                        <p className="mt-0.5 text-xs text-base-content/50">Transaksi terakhir</p>
                     </div>
                 </div>
             </div>

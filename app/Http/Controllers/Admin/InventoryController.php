@@ -41,8 +41,8 @@ class InventoryController extends Controller
 
         $items = $query
             ->orderBy('item_name')
-            ->get()
-            ->map(fn (InventoryItem $i) => [
+            ->paginate(10)
+            ->through(fn (InventoryItem $i) => [
                 'id' => $i->id,
                 'itemCode' => $i->item_code,
                 'itemName' => $i->item_name,

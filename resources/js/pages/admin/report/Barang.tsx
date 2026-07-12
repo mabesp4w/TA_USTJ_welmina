@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { Download, Printer, FileText } from 'lucide-react';
-import report from '@/routes/pengelola/report';
+import report from '@/routes/admin/report';
 import AdminLayout from '@/components/layouts/admin/AdminLayout';
 
 const conditionBadge: Record<string, string> = {
@@ -82,7 +82,7 @@ function BarangPage() {
         >
             <div className="min-h-screen">
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
-                    <div className="card">
+                    <div className="card" data-aos="fade-up">
                         <div className="card-body gap-6 p-4 md:p-6">
                             <div className="mb-6 print:hidden">
                                 <div className="flex flex-wrap gap-3">

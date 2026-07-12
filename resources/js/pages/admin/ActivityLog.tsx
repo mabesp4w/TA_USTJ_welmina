@@ -6,14 +6,16 @@ import Modal from "@/components/ui/Modal";
 import StatCard from "@/components/pages/admin/activityLog/StatCard";
 import ActivityLogListCard from "@/components/pages/admin/activityLog/ActivityLogListCard";
 import ActivityLogDetail from "@/components/pages/admin/activityLog/ActivityLogDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/activity-log";
 import type { ActivityLogItem, DetailResponse, Stats } from "@/components/pages/admin/activityLog/types";
+import type { PaginatedData } from "@/types";
 
 function ActivityLogPage({
     logs,
     stats,
 }: {
-    logs: ActivityLogItem[];
+    logs: PaginatedData<ActivityLogItem>;
     stats: Stats;
 }) {
     const [selectedLog, setSelectedLog] = useState<ActivityLogItem | null>(null);
@@ -87,16 +89,23 @@ function ActivityLogPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-aos="fade-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <ActivityLogListCard
-                                logs={logs}
+                                logs={logs.data}
                                 onDetail={openDetail}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={logs.links}
+                                from={logs.from}
+                                to={logs.to}
+                                total={logs.total}
                             />
                         </div>
                     </div>

@@ -13,7 +13,7 @@ class StoreInventoryRequest extends FormRequest
 
     public function rules(): array
     {
-        $itemId = $this->route('inventory')?->getKey();
+        $itemId = $this->route('inventory')?->getKey() ?? $this->route('gymEquipment')?->getKey();
 
         return [
             'itemCode' => [

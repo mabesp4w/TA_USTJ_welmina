@@ -6,14 +6,16 @@ import Modal from "@/components/ui/Modal";
 import StatCard from "@/components/pages/admin/notification/StatCard";
 import NotificationListCard from "@/components/pages/admin/notification/NotificationListCard";
 import NotificationDetail from "@/components/pages/admin/notification/NotificationDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/notification";
 import type { NotificationItem, DetailResponse, Stats } from "@/components/pages/admin/notification/types";
+import type { PaginatedData } from "@/types";
 
 function NotificationPage({
     notifications,
     stats,
 }: {
-    notifications: NotificationItem[];
+    notifications: PaginatedData<NotificationItem>;
     stats: Stats;
 }) {
     const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
@@ -75,16 +77,23 @@ function NotificationPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-aos="fade-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <NotificationListCard
-                                notifications={notifications}
+                                notifications={notifications.data}
                                 onDetail={openDetail}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={notifications.links}
+                                from={notifications.from}
+                                to={notifications.to}
+                                total={notifications.total}
                             />
                         </div>
                     </div>

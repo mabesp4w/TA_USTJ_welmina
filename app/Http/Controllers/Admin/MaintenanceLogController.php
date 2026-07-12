@@ -28,8 +28,8 @@ class MaintenanceLogController extends Controller
 
         $logs = $query
             ->orderBy('maintenance_date', 'desc')
-            ->get()
-            ->map(fn (MaintenanceLog $log) => [
+            ->paginate(10)
+            ->through(fn (MaintenanceLog $log) => [
                 'id' => $log->id,
                 'inventoryItemId' => $log->inventory_item_id,
                 'itemName' => $log->inventoryItem?->item_name ?? '-',

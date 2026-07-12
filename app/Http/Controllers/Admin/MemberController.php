@@ -40,8 +40,8 @@ class MemberController extends Controller
 
         $members = $query
             ->latest()
-            ->get()
-            ->map(fn (Member $member) => [
+            ->paginate(10)
+            ->through(fn (Member $member) => [
                 'id' => $member->id,
                 'memberCode' => $member->member_code,
                 'name' => $member->full_name,

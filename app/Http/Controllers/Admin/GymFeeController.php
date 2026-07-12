@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGymFeeRequest;
+use App\Models\MemberMembership;
 use App\Models\MembershipPackage;
 use App\Models\MembershipPackagePrice;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,8 +29,8 @@ class GymFeeController extends Controller
 
         $packages = $query
             ->orderBy('package_name')
-            ->get()
-            ->map(fn (MembershipPackage $p) => [
+            ->paginate(10)
+            ->through(fn (MembershipPackage $p) => [
                 'id' => $p->id,
                 'packageName' => $p->package_name,
                 'registrationFee' => (int) $p->registration_fee,
@@ -45,9 +47,12 @@ class GymFeeController extends Controller
             ]);
 
         $stats = [
-            'total' => MembershipPackage::count(),
-            'active' => MembershipPackage::where('is_active', true)->count(),
-            'inactive' => MembershipPackage::where('is_active', false)->count(),
+            'revenue' => (int) MemberMembership::where('payment_status', 'paid')
+                ->sum(DB::raw('amount + admin_fee')),
+            'paid' => MemberMembership::where('payment_status', 'paid')->count(),
+            'unpaid' => MemberMembership::where('payment_status', 'unpaid')->count(),
+            'arrears' => (int) MemberMembership::where('payment_status', 'unpaid')
+                ->sum(DB::raw('amount + admin_fee')),
         ];
 
         return Inertia::render('admin/GymFee', [

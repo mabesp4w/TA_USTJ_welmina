@@ -30,8 +30,8 @@ class UserController extends Controller
 
         $users = $query
             ->orderBy('full_name')
-            ->get()
-            ->map(fn (User $u) => [
+            ->paginate(10)
+            ->through(fn (User $u) => [
                 'id' => $u->id,
                 'fullName' => $u->full_name,
                 'username' => $u->username,

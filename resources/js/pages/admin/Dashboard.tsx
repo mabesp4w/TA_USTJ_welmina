@@ -57,7 +57,7 @@ function DashboardPage({
             <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                 <div className="card">
                     <div className="card-body gap-6 p-4 md:p-6">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-down">
                             {stats.map((card) => (
                                 <StatCard
                                     key={card.title}
@@ -68,7 +68,7 @@ function DashboardPage({
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" data-aos="fade-up" data-aos-delay="150">
                             <SimpleListCard
                                 title="Distribusi Kategori"
                                 items={categories}
@@ -125,7 +125,7 @@ function DashboardPage({
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100/70 backdrop-blur-sm">
+                        <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100/70 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="300">
                             <table className="table">
                                 <thead>
                                     <tr>

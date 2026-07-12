@@ -32,9 +32,8 @@ class ActivityLogController extends Controller
 
         $logs = $query
             ->orderByDesc('activity_time')
-            ->limit(500)
-            ->get()
-            ->map(fn (ActivityLog $l) => [
+            ->paginate(10)
+            ->through(fn (ActivityLog $l) => [
                 'id' => $l->id,
                 'activityTime' => $l->activity_time?->format('Y-m-d H:i:s'),
                 'activityName' => $l->activity_name,

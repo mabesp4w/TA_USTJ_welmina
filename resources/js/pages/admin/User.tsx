@@ -7,15 +7,17 @@ import StatCard from "@/components/pages/admin/user/StatCard";
 import UserListCard from "@/components/pages/admin/user/UserListCard";
 import UserForm from "@/components/pages/admin/user/UserForm";
 import UserDetail from "@/components/pages/admin/user/UserDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/user";
 import { user as userRoute } from "@/routes/admin";
 import type { UserItem, DetailResponse, Stats } from "@/components/pages/admin/user/types";
+import type { PaginatedData } from "@/types";
 
 function UserPage({
     users,
     stats,
 }: {
-    users: UserItem[];
+    users: PaginatedData<UserItem>;
     stats: Stats;
 }) {
     const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
@@ -111,17 +113,24 @@ function UserPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-aos="fade-up">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <UserListCard
-                                users={users}
+                                users={users.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={users.links}
+                                from={users.from}
+                                to={users.to}
+                                total={users.total}
                             />
                         </div>
                     </div>

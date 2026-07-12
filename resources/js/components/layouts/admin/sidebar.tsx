@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { activityLog, category, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, supplier, user as userRoute } from '@/routes/admin';
+import { activityLog, category, dashboard, gymEquipment, gymFee, inventory, maintenanceLogs, member, notification, procurement, registrationPayment, report, settings, supplier, user as userRoute } from '@/routes/admin';
 import {
     dashboard as pengelolaDashboard,
     gymEquipment as pengelolaGymEquipment,
@@ -27,6 +27,7 @@ import {
     LayoutDashboard,
     LogOut,
     Package,
+    Settings,
     ShieldUser,
     ShoppingCart,
     Users,
@@ -92,6 +93,7 @@ export const adminMenuSections: MenuSection[] = [
             { label: "Laporan", icon: FileText, href: report.url() },
             { label: "Notifikasi", icon: Bell, href: notification.url() },
             { label: "Pengguna", icon: ShieldUser, href: userRoute.url() },
+            { label: "Pengaturan", icon: Settings, href: settings.url() },
         ],
     },
 ];
@@ -133,7 +135,8 @@ export default function SidebarFitnessCenter({
     menuSections?: MenuSection[];
     subtitle?: string;
 }) {
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const unreadNotifications = (props.unreadNotifications as number | undefined) ?? 0;
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -193,6 +196,8 @@ export default function SidebarFitnessCenter({
                             {section.items.map((item) => {
                                 const Icon = item.icon;
                                 const active = isActive(item.href);
+                                const showBadge =
+                                    item.href === notification.url() && unreadNotifications > 0;
 
                                 return (
                                     <li key={item.label}>
@@ -208,6 +213,11 @@ export default function SidebarFitnessCenter({
                                         >
                                             <Icon size={18} strokeWidth={2} />
                                             <span>{item.label}</span>
+                                            {showBadge && (
+                                                <span className="badge badge-error badge-sm ml-auto text-error-content">
+                                                    {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                                                </span>
+                                            )}
                                         </Link>
                                     </li>
                                 );

@@ -32,8 +32,8 @@ class ProcurementController extends Controller
 
         $procurements = $query
             ->orderByDesc('procurement_date')
-            ->get()
-            ->map(fn (Procurement $p) => [
+            ->paginate(10)
+            ->through(fn (Procurement $p) => [
                 'id' => $p->id,
                 'procurementCode' => $p->procurement_code,
                 'itemName' => $p->item?->item_name ?? '-',

@@ -29,8 +29,8 @@ class SupplierController extends Controller
 
         $suppliers = $query
             ->orderBy('supplier_name')
-            ->get()
-            ->map(fn (Supplier $s) => [
+            ->paginate(10)
+            ->through(fn (Supplier $s) => [
                 'id' => $s->id,
                 'supplierName' => $s->supplier_name,
                 'phone' => $s->phone,

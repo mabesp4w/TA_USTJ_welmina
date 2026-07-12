@@ -47,8 +47,8 @@ class GymEquipmentController extends Controller
 
         $items = $query
             ->orderBy('item_name')
-            ->get()
-            ->map(fn (InventoryItem $i) => [
+            ->paginate(10)
+            ->through(fn (InventoryItem $i) => [
                 'id' => $i->id,
                 'itemCode' => $i->item_code,
                 'itemName' => $i->item_name,
@@ -288,8 +288,8 @@ class GymEquipmentController extends Controller
 
         $categories = $query
             ->orderBy('category_name')
-            ->get()
-            ->map(fn (InventoryCategory $c) => [
+            ->paginate(10)
+            ->through(fn (InventoryCategory $c) => [
                 'id' => $c->id,
                 'categoryName' => $c->category_name,
                 'description' => $c->description,

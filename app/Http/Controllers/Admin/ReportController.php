@@ -8,7 +8,6 @@ use App\Exports\KeuanganReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\InventoryItem;
-use App\Models\InventoryLoan;
 use App\Models\MaintenanceLog;
 use App\Models\Member;
 use App\Models\MemberMembership;
@@ -594,7 +593,7 @@ class ReportController extends Controller
 
         $maintenanceToday = MaintenanceLog::whereDate('maintenance_date', $today)->count();
 
-        $activeLoans = InventoryLoan::whereNull('returned_at')->count();
+        $activeLoans = 0;
 
         $recentProcurements = Procurement::with('item')
             ->orderByDesc('procurement_date')

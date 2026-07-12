@@ -7,15 +7,17 @@ import StatCard from "@/components/pages/admin/maintenanceLog/StatCard";
 import MaintenanceLogListCard from "@/components/pages/admin/maintenanceLog/MaintenanceLogListCard";
 import MaintenanceLogForm from "@/components/pages/admin/maintenanceLog/MaintenanceLogForm";
 import MaintenanceLogDetail from "@/components/pages/admin/maintenanceLog/MaintenanceLogDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/maintenance-logs";
 import type { MaintenanceLogItem, DetailResponse, Stats, InventoryItemOption } from "@/components/pages/admin/maintenanceLog/types";
+import type { PaginatedData } from "@/types";
 
 function MaintenanceLogPage({
     logs,
     stats,
     inventoryItems,
 }: {
-    logs: MaintenanceLogItem[];
+    logs: PaginatedData<MaintenanceLogItem>;
     stats: Stats;
     inventoryItems: InventoryItemOption[];
 }) {
@@ -107,17 +109,24 @@ function MaintenanceLogPage({
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-up" data-aos-delay="100">
                                 {statCards.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
                             </div>
 
                             <MaintenanceLogListCard
-                                logs={logs}
+                                logs={logs.data}
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={logs.links}
+                                from={logs.from}
+                                to={logs.to}
+                                total={logs.total}
                             />
                         </div>
                     </div>

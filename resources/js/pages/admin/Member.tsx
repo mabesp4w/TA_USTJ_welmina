@@ -7,8 +7,10 @@ import StatCard from "@/components/pages/admin/member/StatCard";
 import MemberListCard from "@/components/pages/admin/member/MemberListCard";
 import MemberForm from "@/components/pages/admin/member/MemberForm";
 import MemberDetail from "@/components/pages/admin/member/MemberDetail";
+import Pagination from "@/components/ui/Pagination";
 import { show, destroy } from "@/routes/admin/member";
 import type { Stat, MemberItem } from "@/components/pages/admin/member/types";
+import type { PaginatedData } from "@/types";
 
 type DetailResponse = {
     member: {
@@ -46,7 +48,7 @@ type EditMemberData = {
     memberStatus: string;
 };
 
-function MemberPage({ stats, members }: { stats: Stat[]; members: MemberItem[] }) {
+function MemberPage({ stats, members }: { stats: Stat[]; members: PaginatedData<MemberItem> }) {
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [selectedMember, setSelectedMember] = useState<MemberItem | null>(null);
     const [editData, setEditData] = useState<EditMemberData | null>(null);
@@ -56,8 +58,8 @@ function MemberPage({ stats, members }: { stats: Stat[]; members: MemberItem[] }
     const [deleteLoading, setDeleteLoading] = useState(false);
 
     const filteredMembers = statusFilter
-        ? members.filter((m) => m.status === statusFilter)
-        : members;
+        ? members.data.filter((m) => m.status === statusFilter)
+        : members.data;
 
     const handleFilterChange = (filter: string | null) => {
         setStatusFilter(filter);
@@ -137,7 +139,7 @@ function MemberPage({ stats, members }: { stats: Stat[]; members: MemberItem[] }
                 <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
                     <div className="card">
                         <div className="card-body gap-6 p-4 md:p-6">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-aos="fade-right">
                                 {stats.map((item) => (
                                     <StatCard key={item.title} {...item} />
                                 ))}
@@ -150,6 +152,13 @@ function MemberPage({ stats, members }: { stats: Stat[]; members: MemberItem[] }
                                 onDetail={openDetail}
                                 onEdit={openEdit}
                                 onDelete={confirmDelete}
+                            />
+
+                            <Pagination
+                                links={members.links}
+                                from={members.from}
+                                to={members.to}
+                                total={members.total}
                             />
                         </div>
                     </div>
