@@ -3,9 +3,16 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Sistem Informasi Manajemen Inventaris Gym — Fitness Center Vicca Sera Polimak">
+
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="Fitness Center Vicca Sera Polimak">
+        <meta property="og:description" content="Sistem Informasi Manajemen Inventaris Gym — Kelola data member, inventaris, transaksi, dan laporan dalam satu sistem.">
+        <meta property="og:image" content="{{ asset('icon.png') }}">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/icon.png" type="image/png">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @fonts

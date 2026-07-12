@@ -11,11 +11,6 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
-    resolve: (name) => {
-        const pages = import.meta.glob('./pages/**/*.tsx', { eager: true }) as Record<string, { default: React.ComponentType }>;
-
-        return pages[`./pages/${name}.tsx`];
-    },
     setup({ el, App, props }) {
         const content = (
             <AosProvider>

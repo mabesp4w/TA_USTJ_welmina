@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-ByEvevaM.js";import n from"./Dashboard-BraaDjAH.js";import{t as r}from"./PengelolaLayout-DD55ZJTg.js";var i=e(),a=t();function o(e){let t=(0,i.c)(2),r;return t[0]===e?r=t[1]:(r=(0,a.jsx)(n,{...e}),t[0]=e,t[1]=r),r}o.layout=e=>(0,a.jsx)(r,{children:e});export{o as default};
