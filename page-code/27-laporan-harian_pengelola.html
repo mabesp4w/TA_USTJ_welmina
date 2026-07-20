@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>27. Laporan Harian (Pengelola) — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>27. Laporan Harian (Pengelola)</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/ReportController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/ReportController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class ReportController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $tab = $request-&gt;query('tab', 'barang');
+
+        $data = match ($tab) {
+            'barang' =&gt; $this-&gt;inventoryReport(),
+            'keuangan' =&gt; $this-&gt;financialReport(),
+            'harian' =&gt; $this-&gt;dailyReport(),
+            default =&gt; $this-&gt;inventoryReport(),
+        };
+
+        return Inertia::render('admin/Report', [
+            'tab' =&gt; $tab,
+            'reportData' =&gt; $data,
+        ]);
+    }
+
+    public function barang(Request $request): Response
+    {
+        $condition = $request-&gt;query('condition');
+
+        $items = InventoryItem::with(['category', 'supplier'])
+            -&gt;when($condition, fn ($q, $c) =&gt; $q-&gt;where('item_condition', $c))
+            -&gt;orderBy('item_name')
+            -&gt;get()
+            -&gt;map(fn ($i) =&gt; [
+                'id' =&gt; $i-&gt;id,
+                'itemCode' =&gt; $i-&gt;item_code,
+                'itemName' =&gt; $i-&gt;item_name,
+                'categoryName' =&gt; $i-&gt;category?-&gt;category_name ?? '-',
+                'stock' =&gt; $i-&gt;stock,
+                'itemCondition' =&gt; $i-&gt;item_condition,
+                'itemStatus' =&gt; $i-&gt;item_status,
+                'locationName' =&gt; $i-&gt;location_name,
+                'supplierName' =&gt; $i-&gt;supplier?-&gt;supplier_name ?? '-',
+                'lastServiceDate' =&gt; $i-&gt;last_service_date?-&gt;toDateString(),
+                'notes' =&gt; $i-&gt;notes,
+            ]);
+
+        $stats = [
+            'total' =&gt; $items-&gt;count(),
+            'baik' =&gt; $items-&gt;where('itemCondition', 'baik')-&gt;count(),
+            'perluPerawatan' =&gt; $items-&gt;where('itemCondition', 'perlu_perawatan')-&gt;count(),
+            'rusak' =&gt; $items-&gt;where('itemCondition', 'rusak')-&gt;count(),
+        ];
+
+        return $this-&gt;inertia('admin/report/Barang', [
+            'items' =&gt; $items,
+            'stats' =&gt; $stats,
+            'condition' =&gt; $condition,
+        ]);
+    }
+
+    public function keuangan(Request $request): Response
+    {
+        $month = $request-&gt;query('month');
+        $year = $request-&gt;query('year', now()-&gt;year);
+
+        $registrationQuery = RegistrationPayment::where('payment_status', 'paid');
+        $membershipQuery = MemberMembership::where('payment_status', 'paid');
+
+        if ($month) {
+            $registrationQuery-&gt;whereMonth('registration_date', $month)-&gt;whereYear('registration_date', $year);
+            $membershipQuery-&gt;whereMonth('paid_at', $month)-&gt;whereYear('paid_at', $year);
+        }
+
+        $totalRegistrationIncome = (int) $registrationQuery-&gt;sum('registration_fee');
+        $totalRegistrationAdmin = (int) $registrationQuery-&gt;sum('admin_fee');
+        $totalMembershipIncome = (int) $membershipQuery-&gt;sum('amount');
+        $totalMembershipAdmin = (int) $membershipQuery-&gt;sum('admin_fee');
+        $totalIncome = $totalRegistrationIncome + $totalRegistrationAdmin + $totalMembershipIncome + $totalMembershipAdmin;
+
+        $procurementQuery = Procurement::query();
+        if ($month) {
+            $procurementQuery-&gt;whereMonth('procurement_date', $month)-&gt;whereYear('procurement_date', $year);
+        }
+        $totalExpenses = (int) $procurementQuery-&gt;sum('total_price');
+
+        $registrationRegistrationsQuery = RegistrationPayment::query();
+        $membershipRegistrationsQuery = MemberMembership::query();
+        $procurementRegistrationsQuery = Procurement::query();
+        if ($month) {
+            $registrationRegistrationsQuery-&gt;whereMonth('registration_date', $month)-&gt;whereYear('registration_date', $year);
+            $membershipRegistrationsQuery-&gt;whereMonth('paid_at', $month)-&gt;whereYear('paid_at', $year);
+            $procurementRegistrationsQuery-&gt;whereMonth('procurement_date', $month)-&gt;whereYear('procurement_date', $year);
+        }
+        $registrationCount = $registrationRegistrationsQuery-&gt;count();
+        $membershipCount = $membershipRegistrationsQuery-&gt;count();
+        $procurementCount = $procurementRegistrationsQuery-&gt;count();
+
+        $incomeByMonth = RegistrationPayment::selectRaw(
+            &quot;DATE_FORMAT(registration_date, '%Y-%m') as month, sum(registration_fee + admin_fee) as total, count(*) as transactions&quot;
+        )
+            -&gt;where('payment_status', 'paid')
+            -&gt;groupBy('month')
+            -&gt;orderBy('month')
+            -&gt;get();
+
+        $membershipByMonth = MemberMembership::selectRaw(
+            &quot;DATE_FORMAT(paid_at, '%Y-%m') as month, sum(amount + admin_fee) as total, count(*) as transactions&quot;
+        )
+            -&gt;where('payment_status', 'paid')
+            -&gt;groupBy('month')
+            -&gt;orderBy('month')
+            -&gt;get();
+
+        $expensesByMonth = Procurement::selectRaw(
+            &quot;DATE_FORMAT(procurement_date, '%Y-%m') as month, sum(total_price) as total, count(*) as transactions&quot;
+        )
+            -&gt;groupBy('month')
+            -&gt;orderBy('month')
+            -&gt;get();
+
+        $recentTransactions = RegistrationPayment::with('member')
+            -&gt;where('payment_status', 'paid')
+            -&gt;orderByDesc('registration_date')
+            -&gt;limit(10)
+            -&gt;get()
+            -&gt;map(fn ($p) =&gt; [
+                'date' =&gt; $p-&gt;registration_date?-&gt;toDateString(),
+                'description' =&gt; 'Pendaftaran: '.($p-&gt;member?-&gt;full_name ?? '-'),
+                'type' =&gt; 'income',
+                'amount' =&gt; (int) ($p-&gt;registration_fee + $p-&gt;admin_fee),
+            ]);
+
+        $recentMemberships = MemberMembership::with('member')
+            -&gt;where('payment_status', 'paid')
+            -&gt;orderByDesc('paid_at')
+            -&gt;limit(10)
+            -&gt;get()
+            -&gt;map(fn ($m) =&gt; [
+                'date' =&gt; $m-&gt;paid_at?-&gt;toDateString(),
+                'description' =&gt; 'Iuran: '.($m-&gt;member?-&gt;full_name ?? '-').' ('.$m-&gt;duration_months.' bln)',
+                'type' =&gt; 'income',
+                'amount' =&gt; (int) ($m-&gt;amount + $m-&gt;admin_fee),
+            ]);
+
+        $recentExpenses = Procurement::with('item')
+            -&gt;orderByDesc('procurement_date')
+            -&gt;limit(10)
+            -&gt;get()
+            -&gt;map(fn ($p) =&gt; [
+                'date' =&gt; $p-&gt;procurement_date?-&gt;toDateString(),
+                'description' =&gt; 'Pengadaan: '.($p-&gt;item?-&gt;item_name ?? '-'),
+                'type' =&gt; 'expense',
+                'amount' =&gt; (int) $p-&gt;total_price,
+            ]);
+
+        $merged = collect($recentTransactions)
+            -&gt;concat($recentMemberships)
+            -&gt;concat($recentExpenses)
+            -&gt;sortByDesc('date')
+            -&gt;take(10)
+            -&gt;values();
+
+        return $this-&gt;inertia('admin/report/Keuangan', [
+            'stats' =&gt; [
+                'totalIncome' =&gt; $totalIncome,
+                'totalExpenses' =&gt; $totalExpenses,
+                'netIncome' =&gt; $totalIncome - $totalExpenses,
+                'registrationIncome' =&gt; $totalRegistrationIncome + $totalRegistrationAdmin,
+                'membershipIncome' =&gt; $totalMembershipIncome + $totalMembershipAdmin,
+                'registrationCount' =&gt; $registrationCount,
+                'membershipCount' =&gt; $membershipCount,
+                'procurementCount' =&gt; $procurementCount,
+            ],
+            'incomeByMonth' =&gt; $incomeByMonth,
+            'membershipByMonth' =&gt; $membershipByMonth,
+            'expensesByMonth' =&gt; $expensesByMonth,
+            'recentTransactions' =&gt; $merged,
+            'month' =&gt; $month,
+            'year' =&gt; $year,
+        ]);
+    }
+
+    public function harian(Request $request): Response
+    {
+        $date = $request-&gt;query('date', now()-&gt;toDateString());
+
+        $registrations = RegistrationPayment::with('member')
+            -&gt;whereDate('registration_date', $date)
+            -&gt;orderBy('registration_date')
+            -&gt;get()
+            -&gt;map(fn ($p) =&gt; [
+                'id' =&gt; $p-&gt;id,
+                'time' =&gt; $p-&gt;registration_date?-&gt;toDateString(),
+                'memberName' =&gt; $p-&gt;member?-&gt;full_name ?? '-',
+                'amount' =&gt; (int) ($p-&gt;registration_fee + $p-&gt;admin_fee),
+                'status' =&gt; $p-&gt;payment_status,
+            ]);
+
+        $memberships = MemberMembership::with('member')
+            -&gt;whereDate('paid_at', $date)
+            -&gt;where('payment_status', 'paid')
+            -&gt;orderBy('paid_at')
+            -&gt;get()
+            -&gt;map(fn ($m) =&gt; [
+                'id' =&gt; $m-&gt;id,
+                'time' =&gt; $m-&gt;paid_at?-&gt;toDateString(),
+                'memberName' =&gt; $m-&gt;member?-&gt;full_name ?? '-',
+                'durationMonths' =&gt; $m-&gt;duration_months,
+                'amount' =&gt; (int) ($m-&gt;amount + $m-&gt;admin_fee),
+            ]);
+
+        $procurements = Procurement::with('item')
+            -&gt;whereDate('procurement_date', $date)
+            -&gt;orderBy('procurement_date')
+            -&gt;get()
+            -&gt;map(fn ($p) =&gt; [
+                'id' =&gt; $p-&gt;id,
+                'time' =&gt; $p-&gt;procurement_date?-&gt;toDateString(),
+                'itemName' =&gt; $p-&gt;item?-&gt;item_name ?? '-',
+                'quantity' =&gt; $p-&gt;quantity,
+                'totalPrice' =&gt; (int) $p-&gt;total_price,
+                'code' =&gt; $p-&gt;procurement_code,
+            ]);
+
+        $maintenances = MaintenanceLog::with('inventoryItem')
+            -&gt;whereDate('maintenance_date', $date)
+            -&gt;orderBy('maintenance_date')
+            -&gt;get()
+            -&gt;map(fn ($m) =&gt; [
+                'id' =&gt; $m-&gt;id,
+                'time' =&gt; $m-&gt;maintenance_date?-&gt;toDateString(),
+                'itemName' =&gt; $m-&gt;inventoryItem?-&gt;item_name ?? '-',
+                'type' =&gt; $m-&gt;maintenance_type,
+                'cost' =&gt; (int) $m-&gt;cost,
+            ]);
+
+        $activities = ActivityLog::with('user')
+            -&gt;whereDate('activity_time', $date)
+            -&gt;orderByDesc('activity_time')
+            -&gt;limit(20)
+            -&gt;get()
+            -&gt;map(fn ($a) =&gt; [
+                'id' =&gt; $a-&gt;id,
+                'time' =&gt; $a-&gt;activity_time?-&gt;toDateTimeString(),
+                'name' =&gt; $a-&gt;activity_name,
+                'type' =&gt; $a-&gt;activity_type,
+                'description' =&gt; $a-&gt;description,
+                'userName' =&gt; $a-&gt;user?-&gt;full_name ?? '-',
+            ]);
+
+        $newMembers = Member::whereDate('joined_at', $date)-&gt;count();
+
+        $totalIncome = $registrations-&gt;sum('amount') + $memberships-&gt;sum('amount');
+        $totalExpenses = $procurements-&gt;sum('totalPrice') + $maintenances-&gt;sum('cost');
+
+        return $this-&gt;inertia('admin/report/Harian', [
+            'date' =&gt; $date,
+            'stats' =&gt; [
+                'totalIncome' =&gt; $totalIncome,
+                'totalExpenses' =&gt; $totalExpenses,
+                'registrations' =&gt; $registrations-&gt;count(),
+                'memberships' =&gt; $memberships-&gt;count(),
+                'procurements' =&gt; $procurements-&gt;count(),
+                'maintenances' =&gt; $maintenances-&gt;count(),
+                'activities' =&gt; $activities-&gt;count(),
+                'newMembers' =&gt; $newMembers,
+            ],
+            'registrations' =&gt; $registrations,
+            'memberships' =&gt; $memberships,
+            'procurements' =&gt; $procurements,
+            'maintenances' =&gt; $maintenances,
+            'activities' =&gt; $activities,
+        ]);
+    }
+
+    public function barangPdf(Request $request)
+    {
+        $condition = $request-&gt;query('condition');
+
+        $items = InventoryItem::with(['category', 'supplier'])
+            -&gt;when($condition, fn ($q, $c) =&gt; $q-&gt;where('item_condition', $c))
+            -&gt;orderBy('item_name')
+            -&gt;get()
+            -&gt;map(fn ($i) =&gt; [
+                'itemCode' =&gt; $i-&gt;item_code,
+                'itemName' =&gt; $i-&gt;item_name,
+                'categoryName' =&gt; $i-&gt;category?-&gt;category_name ?? '-',
+                'stock' =&gt; $i-&gt;stock,
+                'itemCondition' =&gt; $i-&gt;item_condition,
+                'itemStatus' =&gt; $i-&gt;item_status,
+                'locationName' =&gt; $i-&gt;location_name,
+                'supplierName' =&gt; $i-&gt;supplier?-&gt;supplier_name ?? '-',
+            ]);
+
+        $stats = [
+            'total' =&gt; $items-&gt;count(),
+            'baik' =&gt; $items-&gt;where('itemCondition', 'baik')-&gt;count(),
+            'perluPerawatan' =&gt; $items-&gt;where('itemCondition', 'perlu_perawatan')-&gt;count(),
+            'rusak' =&gt; $items-&gt;where('itemCondition', 'rusak')-&gt;count(),
+        ];
+
+        $html = View::make('reports.barang', [
+            'items' =&gt; $items,
+            'stats' =&gt; $stats,
+            'condition' =&gt; $condition,
+        ])-&gt;render();
+
+        $dompdf = new Dompdf;
+        $dompdf-&gt;loadHtml($html);
+        $dompdf-&gt;setPaper('A4', 'portrait');
+        $dompdf-&gt;render();
+
+        return response($dompdf-&gt;output(), 200, [
+            'Content-Type' =&gt; 'application/pdf',
+            'Content-Disposition' =&gt; 'attachment; filename=&quot;laporan-barang.pdf&quot;',
+        ]);
+    }
+
+    public function barangExcel(Request $request)
+    {
+        $condition = $request-&gt;query('condition');
+
+        return Excel::download(
+            new BarangReportExport($condition),
+            'laporan-barang.xlsx'
+        );
+    }
+
+    public function keuanganPdf(Request $request)
+    {
+        $month = $request-&gt;query('month');
+        $year = $request-&gt;query('year', now()-&gt;year);
+
+        $registrationQuery = RegistrationPayment::where('payment_status', 'paid');
+        $membershipQuery = MemberMembership::where('payment_status', 'paid');
+
+        if ($month) {
+            $registrationQuery-&gt;whereMonth('registration_date', $month)-&gt;whereYear('registration_date', $year);
+            $membershipQuery-&gt;whereMonth('paid_at', $month)-&gt;whereYear('paid_at', $year);
+        }
+
+        $totalRegistrationIncome = (int) $registrationQuery-&gt;sum('registration_fee');
+        $totalRegistrationAdmin = (int) $registrationQuery-&gt;sum('admin_fee');
+        $totalMembershipIncome = (int) $membershipQuery-&gt;sum('amount');
+        $totalMembershipAdmin = (int) $membershipQuery-&gt;sum('admin_fee');
+        $totalIncome = $totalRegistrationIncome + $totalRegistrationAdmin + $totalMembershipIncome + $totalMembershipAdmin;
+
+        $procurementQuery = Procurement::query();
+        if ($month) {
+            $procurementQuery-&gt;whereMonth('procurement_date', $month)-&gt;whereYear('procurement_date', $year);
+        }
+        $totalExpenses = (int) $procurementQuery-&gt;sum('total_price');
+
+        $registrationCount = RegistrationPayment::where('payment_status', 'paid')
+            -&gt;when($month, fn ($q) =&gt; $q-&gt;whereMonth('registration_date', $month)-&gt;whereYear('registration_date', $year))
+            -&gt;count();
+        $membershipCount = MemberMembership::where('payment_status', 'paid')
+            -&gt;when($month, fn ($q) =&gt; $q-&gt;whereMonth('paid_at', $month)-&gt;whereYear('paid_at', $year))
+            -&gt;count();
+        $procurementCount = Procurement::query()
+            -&gt;when($month, fn ($q) =&gt; $q-&gt;whereMonth('procurement_date', $month)-&gt;whereYear('procurement_date', $year))
+            -&gt;count();
+
+        $incomeByMonth = RegistrationPayment::selectRaw(
+            &quot;DATE_FORMAT(registration_date, '%Y-%m') as month, sum(registration_fee + admin_fee) as total&quot;
+        )
+            -&gt;where('payment_status', 'paid')
+            -&gt;groupBy('month')-&gt;orderBy('month')-&gt;get();
+
+        $membershipByMonth = MemberMembership::selectRaw(
+            &quot;DATE_FORMAT(paid_at, '%Y-%m') as month, sum(amount + admin_fee) as total&quot;
+        )
+            -&gt;where('payment_status', 'paid')
+            -&gt;groupBy('month')-&gt;orderBy('month')-&gt;get();
+
+        $expensesByMonth = Procurement::selectRaw(
+            &quot;DATE_FORMAT(procurement_date, '%Y-%m') as month, sum(total_price) as total&quot;
+        )
+            -&gt;groupBy('month')-&gt;orderBy('month')-&gt;get();
+
+        $allMonths = collect($incomeByMonth)-&gt;pluck('month')
+            -&gt;merge(collect($membershipByMonth)-&gt;pluck('month'))
+            -&gt;merge(collect($expensesByMonth)-&gt;pluck('month'))
+            -&gt;unique()-&gt;sort()-&gt;values();
+
+        $mergedMonths = $allMonths-&gt;map(fn ($m) =&gt; [
+            'month' =&gt; $m,
+            'registration' =&gt; (int) (collect($incomeByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0),
+            'membership' =&gt; (int) (collect($membershipByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0),
+            'totalIncome' =&gt; (int) (collect($incomeByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0) + (int) (collect($membershipByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0),
+            'totalExpense' =&gt; (int) (collect($expensesByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0),
+            'net' =&gt; (int) (collect($incomeByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0) + (int) (collect($membershipByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0) - (int) (collect($expensesByMonth)-&gt;firstWhere('month', $m)?-&gt;total ?? 0),
+        ]);
+
+        $recentTransactions = collect(
+            RegistrationPayment::with('member')-&gt;where('payment_status', 'paid')-&gt;orderByDesc('registration_date')-&gt;limit(10)-&gt;get()
+                -&gt;map(fn ($p) =&gt; ['date' =&gt; $p-&gt;registration_date?-&gt;toDateString(), 'description' =&gt; 'Pendaftaran: '.($p-&gt;member?-&gt;full_name ?? '-'), 'type' =&gt; 'income', 'amount' =&gt; (int) ($p-&gt;registration_fee + $p-&gt;admin_fee)])
+        )-&gt;concat(
+            MemberMembership::with('member')-&gt;where('payment_status', 'paid')-&gt;orderByDesc('paid_at')-&gt;limit(10)-&gt;get()
+                -&gt;map(fn ($m) =&gt; ['date' =&gt; $m-&gt;paid_at?-&gt;toDateString(), 'description' =&gt; 'Iuran: '.($m-&gt;member?-&gt;full_name ?? '-'), 'type' =&gt; 'income', 'amount' =&gt; (int) ($m-&gt;amount + $m-&gt;admin_fee)])
+        )-&gt;concat(
+            Procurement::with('item')-&gt;orderByDesc('procurement_date')-&gt;limit(10)-&gt;get()
+                -&gt;map(fn ($p) =&gt; ['date' =&gt; $p-&gt;procurement_date?-&gt;toDateString(), 'description' =&gt; 'Pengadaan: '.($p-&gt;item?-&gt;item_name ?? '-'), 'type' =&gt; 'expense', 'amount' =&gt; (int) $p-&gt;total_price])
+        )-&gt;sortByDesc('date')-&gt;take(10)-&gt;values();
+
+        $stats = [
+            'totalIncome' =&gt; $totalIncome,
+            'totalExpenses' =&gt; $totalExpenses,
+            'netIncome' =&gt; $totalIncome - $totalExpenses,
+            'registrationIncome' =&gt; $totalRegistrationIncome + $totalRegistrationAdmin,
+            'membershipIncome' =&gt; $totalMembershipIncome + $totalMembershipAdmin,
+            'registrationCount' =&gt; $registrationCount,
+            'membershipCount' =&gt; $membershipCount,
+            'procurementCount' =&gt; $procurementCount,
+        ];
+
+        $html = View::make('reports.keuangan', [
+            'stats' =&gt; $stats,
+            'mergedMonths' =&gt; $mergedMonths,
+            'recentTransactions' =&gt; $recentTransactions,
+            'month' =&gt; $month,
+            'year' =&gt; $year,
+        ])-&gt;render();
+
+        $dompdf = new Dompdf;
+        $dompdf-&gt;loadHtml($html);
+        $dompdf-&gt;setPaper('A4', 'landscape');
+        $dompdf-&gt;render();
+
+        return response($dompdf-&gt;output(), 200, [
+            'Content-Type' =&gt; 'application/pdf',
+            'Content-Disposition' =&gt; 'attachment; filename=&quot;laporan-keuangan.pdf&quot;',
+        ]);
+    }
+
+    public function keuanganExcel(Request $request)
+    {
+        $month = $request-&gt;query('month');
+        $year = $request-&gt;query('year', now()-&gt;year);
+
+        return Excel::download(
+            new KeuanganReportExport($month, $year),
+            'laporan-keuangan.xlsx'
+        );
+    }
+
+    public function harianPdf(Request $request)
+    {
+        $date = $request-&gt;query('date', now()-&gt;toDateString());
+
+        $registrations = RegistrationPayment::with('member')
+            -&gt;whereDate('registration_date', $date)-&gt;orderBy('registration_date')-&gt;get()
+            -&gt;map(fn ($p) =&gt; ['memberName' =&gt; $p-&gt;member?-&gt;full_name ?? '-', 'amount' =&gt; (int) ($p-&gt;registration_fee + $p-&gt;admin_fee), 'status' =&gt; $p-&gt;payment_status]);
+
+        $memberships = MemberMembership::with('member')
+            -&gt;whereDate('paid_at', $date)-&gt;where('payment_status', 'paid')-&gt;orderBy('paid_at')-&gt;get()
+            -&gt;map(fn ($m) =&gt; ['memberName' =&gt; $m-&gt;member?-&gt;full_name ?? '-', 'durationMonths' =&gt; $m-&gt;duration_months, 'amount' =&gt; (int) ($m-&gt;amount + $m-&gt;admin_fee)]);
+
+        $procurements = Procurement::with('item')
+            -&gt;whereDate('procurement_date', $date)-&gt;orderBy('procurement_date')-&gt;get()
+            -&gt;map(fn ($p) =&gt; ['code' =&gt; $p-&gt;procurement_code, 'itemName' =&gt; $p-&gt;item?-&gt;item_name ?? '-', 'quantity' =&gt; $p-&gt;quantity, 'totalPrice' =&gt; (int) $p-&gt;total_price]);
+
+        $maintenances = MaintenanceLog::with('inventoryItem')
+            -&gt;whereDate('maintenance_date', $date)-&gt;orderBy('maintenance_date')-&gt;get()
+            -&gt;map(fn ($m) =&gt; ['itemName' =&gt; $m-&gt;inventoryItem?-&gt;item_name ?? '-', 'type' =&gt; $m-&gt;maintenance_type, 'cost' =&gt; (int) $m-&gt;cost]);
+
+        $activities = ActivityLog::with('user')
+            -&gt;whereDate('activity_time', $date)-&gt;orderByDesc('activity_time')-&gt;limit(20)-&gt;get()
+            -&gt;map(fn ($a) =&gt; ['time' =&gt; $a-&gt;activity_time?-&gt;toDateTimeString(), 'name' =&gt; $a-&gt;activity_name, 'type' =&gt; $a-&gt;activity_type, 'description' =&gt; $a-&gt;description, 'userName' =&gt; $a-&gt;user?-&gt;full_name ?? '-']);
+
+        $newMembers = Member::whereDate('joined_at', $date)-&gt;count();
+        $totalIncome = $registrations-&gt;sum('amount') + $memberships-&gt;sum('amount');
+        $totalExpenses = $procurements-&gt;sum('totalPrice') + $maintenances-&gt;sum('cost');
+
+        $stats = [
+            'totalIncome' =&gt; $totalIncome,
+            'totalExpenses' =&gt; $totalExpenses,
+            'registrations' =&gt; $registrations-&gt;count(),
+            'memberships' =&gt; $memberships-&gt;count(),
+            'procurements' =&gt; $procurements-&gt;count(),
+            'maintenances' =&gt; $maintenances-&gt;count(),
+            'activities' =&gt; $activities-&gt;count(),
+            'newMembers' =&gt; $newMembers,
+        ];
+
+        $html = View::make('reports.harian', [
+            'date' =&gt; $date,
+            'stats' =&gt; $stats,
+            'registrations' =&gt; $registrations,
+            'memberships' =&gt; $memberships,
+            'procurements' =&gt; $procurements,
+            'maintenances' =&gt; $maintenances,
+            'activities' =&gt; $activities,
+        ])-&gt;render();
+
+        $dompdf = new Dompdf;
+        $dompdf-&gt;loadHtml($html);
+        $dompdf-&gt;setPaper('A4', 'portrait');
+        $dompdf-&gt;render();
+
+        return response($dompdf-&gt;output(), 200, [
+            'Content-Type' =&gt; 'application/pdf',
+            'Content-Disposition' =&gt; 'attachment; filename=&quot;laporan-harian.pdf&quot;',
+        ]);
+    }
+
+    public function harianExcel(Request $request)
+    {
+        $date = $request-&gt;query('date', now()-&gt;toDateString());
+
+        return Excel::download(
+            new HarianReportExport($date),
+            'laporan-harian.xlsx'
+        );
+    }
+
+    private function inventoryReport(): array
+    {
+        $totalItems = InventoryItem::count();
+        $byCondition = InventoryItem::selectRaw('item_condition, count(*) as total')
+            -&gt;groupBy('item_condition')
+            -&gt;pluck('total', 'item_condition');
+
+        $byCategory = InventoryItem::selectRaw('category_id, count(*) as total')
+            -&gt;with('category')
+            -&gt;groupBy('category_id')
+            -&gt;get()
+            -&gt;map(fn ($i) =&gt; [
+                'category' =&gt; $i-&gt;category?-&gt;category_name ?? '-',
+                'total' =&gt; $i-&gt;total,
+            ]);
+
+        $activeItems = InventoryItem::where('item_status', 'aktif')-&gt;count();
+        $inactiveItems = InventoryItem::where('item_status', 'tidak_aktif')-&gt;count();
+
+        return [
+            'totalItems' =&gt; $totalItems,
+            'activeItems' =&gt; $activeItems,
+            'inactiveItems' =&gt; $inactiveItems,
+            'baik' =&gt; $byCondition['baik'] ?? 0,
+            'perluPerawatan' =&gt; $byCondition['perlu_perawatan'] ?? 0,
+            'rusak' =&gt; $byCondition['rusak'] ?? 0,
+            'byCategory' =&gt; $byCategory,
+        ];
+    }
+
+    private function financialReport(): array
+    {
+        $totalProcurements = Procurement::count();
+        $totalSpending = (int) Procurement::sum('total_price');
+        $totalQuantity = (int) Procurement::sum('quantity');
+
+        $spendingByMonth = Procurement::selectRaw(
+            &quot;DATE_FORMAT(procurement_date, '%Y-%m') as month, sum(total_price) as total, sum(quantity) as qty&quot;
+        )
+            -&gt;groupBy('month')
+            -&gt;orderBy('month')
+            -&gt;get();
+
+        $avgUnitPrice = $totalQuantity &gt; 0 ? (int) ($totalSpending / $totalQuantity) : 0;
+
+        return [
+            'totalProcurements' =&gt; $totalProcurements,
+            'totalSpending' =&gt; $totalSpending,
+            'totalQuantity' =&gt; $totalQuantity,
+            'avgUnitPrice' =&gt; $avgUnitPrice,
+            'spendingByMonth' =&gt; $spendingByMonth,
+        ];
+    }
+
+    private function dailyReport(): array
+    {
+        $today = now()-&gt;toDateString();
+
+        $procurementsToday = Procurement::whereDate('procurement_date', $today)-&gt;count();
+
+        $maintenanceToday = MaintenanceLog::whereDate('maintenance_date', $today)-&gt;count();
+
+        $activeLoans = 0;
+
+        $recentProcurements = Procurement::with('item')
+            -&gt;orderByDesc('procurement_date')
+            -&gt;limit(10)
+            -&gt;get()
+            -&gt;map(fn ($p) =&gt; [
+                'date' =&gt; $p-&gt;procurement_date?-&gt;toDateString(),
+                'itemName' =&gt; $p-&gt;item?-&gt;item_name ?? '-',
+                'quantity' =&gt; $p-&gt;quantity,
+                'totalPrice' =&gt; (int) $p-&gt;total_price,
+            ]);
+
+        $summaryByMonth = Procurement::selectRaw(
+            &quot;DATE_FORMAT(procurement_date, '%Y-%m') as month, count(*) as transactions, sum(quantity) as items_in&quot;
+        )
+            -&gt;groupBy('month')
+            -&gt;orderByDesc('month')
+            -&gt;limit(12)
+            -&gt;get();
+
+        return [
+            'procurementsToday' =&gt; $procurementsToday,
+            'maintenanceToday' =&gt; $maintenanceToday,
+            'activeLoans' =&gt; $activeLoans,
+            'recentProcurements' =&gt; $recentProcurements,
+            'summaryByMonth' =&gt; $summaryByMonth,
+        ];
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/pengelola/report/Harian.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/pengelola/report/Harian.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">    Download,
+    Printer,
+    TrendingUp,
+    TrendingDown,
+    Activity,
+    Users,
+    Wrench,
+    ShoppingCart,
+    Calendar,
+} from 'lucide-react';
+
+const typeLabels: Record&lt;string, string&gt; = {
+    tambah: 'Tambah',
+    servis: 'Servis',
+    pinjam: 'Pinjam',
+    kembali: 'Kembali',
+    rusak: 'Rusak',
+    pengadaan: 'Pengadaan',
+    pembayaran: 'Pembayaran',
+    pendaftaran: 'Pendaftaran',
+    lainnya: 'Lainnya',
+};
+
+const conditionLabel: Record&lt;string, string&gt; = {
+    baik: 'Baik',
+    perlu_perawatan: 'Perlu Perawatan',
+    rusak: 'Rusak',
+};
+
+function HarianPage() {
+    const {
+        date,
+        stats,
+        registrations,
+        memberships,
+        procurements,
+        maintenances,
+        activities,
+    } = usePage().props as {
+        date: string;
+        stats: {
+            totalIncome: number;
+            totalExpenses: number;
+            registrations: number;
+            memberships: number;
+            procurements: number;
+            maintenances: number;
+            activities: number;
+            newMembers: number;
+        };
+        registrations: {
+            id: number;
+            time: string;
+            memberName: string;
+            amount: number;
+            status: string;
+        }[];
+        memberships: {
+            id: number;
+            time: string;
+            memberName: string;
+            durationMonths: number;
+            amount: number;
+        }[];
+        procurements: {
+            id: number;
+            time: string;
+            itemName: string;
+            quantity: number;
+            totalPrice: number;
+            code: string;
+        }[];
+        maintenances: {
+            id: number;
+            time: string;
+            itemName: string;
+            type: string;
+            cost: number;
+        }[];
+        activities: {
+            id: number;
+            time: string;
+            name: string;
+            type: string;
+            description: string | null;
+            userName: string;
+        }[];
+    };
+
+    const [selectedDate, setSelectedDate] = useState(date);
+
+    const handleFilter = () =&gt; {
+        router.get(
+            report.harian.url(),
+            { date: selectedDate },
+            { preserveScroll: true, preserveState: true, replace: true },
+        );
+    };
+
+    // ... (JSX markup dibuang)
+}
+
+export default HarianPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="26-laporan-keuangan_pengelola.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="28-dashboard-pimpinan.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>

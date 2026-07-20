@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18. Pengguna — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>18. Pengguna</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/UserController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/UserController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class UserController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = $request-&gt;query('search');
+
+        $query = User::where('role', '!=', 'administrator');
+
+        if ($search) {
+            $query-&gt;where(function ($q) use ($search) {
+                $q-&gt;where('full_name', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('username', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('email', 'like', &quot;%{$search}%&quot;);
+            });
+        }
+
+        $users = $query
+            -&gt;orderBy('full_name')
+            -&gt;paginate(10)
+            -&gt;through(fn (User $u) =&gt; [
+                'id' =&gt; $u-&gt;id,
+                'fullName' =&gt; $u-&gt;full_name,
+                'username' =&gt; $u-&gt;username,
+                'email' =&gt; $u-&gt;email,
+                'role' =&gt; $u-&gt;role,
+                'isActive' =&gt; $u-&gt;is_active,
+            ]);
+
+        $stats = [
+            'total' =&gt; User::where('role', '!=', 'administrator')-&gt;count(),
+            'active' =&gt; User::where('is_active', true)-&gt;where('role', '!=', 'administrator')-&gt;count(),
+            'roles' =&gt; User::selectRaw('role, count(*) as total')
+                -&gt;where('role', '!=', 'administrator')
+                -&gt;groupBy('role')
+                -&gt;orderByDesc('total')
+                -&gt;pluck('total', 'role'),
+        ];
+
+        return Inertia::render('admin/User', [
+            'users' =&gt; $users,
+            'stats' =&gt; $stats,
+        ]);
+    }
+
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $user = User::create([
+            'full_name' =&gt; $request-&gt;input('fullName'),
+            'username' =&gt; $request-&gt;input('username'),
+            'email' =&gt; $request-&gt;input('email'),
+            'password_hash' =&gt; bcrypt($request-&gt;input('password')),
+            'role' =&gt; $request-&gt;input('role'),
+            'is_active' =&gt; $request-&gt;boolean('isActive', true),
+        ]);
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Tambah Pengguna: '.$user-&gt;full_name,
+            description: 'Menambahkan pengguna baru &quot;'.$user-&gt;full_name.'&quot; ('.$user-&gt;username.') dengan role '.$user-&gt;role,
+            referenceTable: 'users',
+            referenceId: $user-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.user')-&gt;with('success', 'Pengguna berhasil disimpan!');
+    }
+
+    public function show(User $user): JsonResponse
+    {
+        return response()-&gt;json([
+            'id' =&gt; $user-&gt;id,
+            'fullName' =&gt; $user-&gt;full_name,
+            'username' =&gt; $user-&gt;username,
+            'email' =&gt; $user-&gt;email,
+            'role' =&gt; $user-&gt;role,
+            'isActive' =&gt; $user-&gt;is_active,
+        ]);
+    }
+
+    public function update(StoreUserRequest $request, User $user): RedirectResponse
+    {
+        $data = [
+            'full_name' =&gt; $request-&gt;input('fullName'),
+            'username' =&gt; $request-&gt;input('username'),
+            'email' =&gt; $request-&gt;input('email'),
+            'role' =&gt; $request-&gt;input('role'),
+            'is_active' =&gt; $request-&gt;boolean('isActive', true),
+        ];
+
+        if ($password = $request-&gt;input('password')) {
+            $data['password_hash'] = bcrypt($password);
+        }
+
+        $user-&gt;update($data);
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Update Pengguna: '.$user-&gt;full_name,
+            description: 'Memperbarui data pengguna &quot;'.$user-&gt;full_name.'&quot; ('.$user-&gt;username.')',
+            referenceTable: 'users',
+            referenceId: $user-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.user')-&gt;with('success', 'Pengguna berhasil diperbarui!');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        if ($user-&gt;id === auth()-&gt;id()) {
+            return redirect()-&gt;route('admin.user')-&gt;with('error', 'Tidak dapat menghapus akun sendiri!');
+        }
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pengguna: '.$user-&gt;full_name,
+            description: 'Menghapus pengguna &quot;'.$user-&gt;full_name.'&quot; ('.$user-&gt;username.')',
+            referenceTable: 'users',
+            referenceId: $user-&gt;id,
+        );
+
+        $user-&gt;delete();
+
+        return redirect()-&gt;route('admin.user')-&gt;with('success', 'Pengguna berhasil dihapus!');
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/admin/User.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/admin/User.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">function UserPage({
+    users,
+    stats,
+}: {
+    users: PaginatedData&lt;UserItem&gt;;
+    stats: Stats;
+}) {
+    const [selectedUser, setSelectedUser] = useState&lt;UserItem | null&gt;(null);
+    const [editData, setEditData] = useState&lt;DetailResponse | null&gt;(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [detailData, setDetailData] = useState&lt;DetailResponse | null&gt;(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const openDetail = async (item: UserItem) =&gt; {
+        setSelectedUser(item);
+        setDetailLoading(true);
+        setDetailData(null);
+
+        document.getElementById(&quot;detail-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ user: item.id }));
+            const data: DetailResponse = await res.json();
+            setDetailData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat detail pengguna&quot;);
+        }
+
+        setDetailLoading(false);
+    };
+
+    const openEdit = async (item: UserItem) =&gt; {
+        setEditData(null);
+        setEditLoading(true);
+
+        document.getElementById(&quot;edit-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ user: item.id }));
+            const data: DetailResponse = await res.json();
+            setEditData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat data pengguna&quot;);
+        }
+
+        setEditLoading(false);
+    };
+
+    const confirmDelete = (item: UserItem) =&gt; {
+        setSelectedUser(item);
+        document.getElementById(&quot;delete-modal&quot;)?.showModal();
+    };
+
+    const handleDelete = () =&gt; {
+        if (!selectedUser) return;
+
+        setDeleteLoading(true);
+
+        router.delete(destroy.url({ user: selectedUser.id }), {
+            preserveScroll: true,
+            onSuccess: () =&gt; {
+                toast.success(&quot;Pengguna berhasil dihapus!&quot;);
+                document.getElementById(&quot;delete-modal&quot;)?.close();
+                setSelectedUser(null);
+            },
+            onError: () =&gt; {
+                toast.error(&quot;Gagal menghapus pengguna&quot;);
+            },
+            onFinish: () =&gt; setDeleteLoading(false),
+        });
+    };
+
+    const closeForm = () =&gt; {
+        document.getElementById(&quot;user-modal&quot;)?.close();
+    };
+
+    const closeEditForm = () =&gt; {
+        setEditData(null);
+        document.getElementById(&quot;edit-modal&quot;)?.close();
+    };
+
+    const roleNames: Record&lt;string, string&gt; = {
+        administrator: &quot;Administrator&quot;,
+        pengelola: &quot;Pengelola&quot;,
+        pimpinan: &quot;Pimpinan&quot;,
+    };
+
+    const statCards = [
+        { title: &quot;Total Pengguna&quot;, value: String(stats.total), subtitle: &quot;Seluruh pengguna&quot; },
+        { title: &quot;Aktif&quot;, value: String(stats.active), subtitle: &quot;Pengguna aktif&quot; },
+        { title: &quot;Role Terbanyak&quot;, value: Object.keys(stats.roles)[0] ? (roleNames[Object.keys(stats.roles)[0]] ?? Object.keys(stats.roles)[0]) : &quot;-&quot;, subtitle: &quot;Role paling banyak&quot; },
+    ];
+
+    // ... (JSX markup dibuang)
+}
+
+UserPage.layout = (page: React.ReactNode) =&gt; &lt;UserLayout&gt;{page}&lt;/UserLayout&gt;;
+
+export default UserPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="17-notifikasi.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="19-pengaturan.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>

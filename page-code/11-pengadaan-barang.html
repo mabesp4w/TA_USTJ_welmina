@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11. Pengadaan Barang — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>11. Pengadaan Barang</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/ProcurementController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/ProcurementController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class ProcurementController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = $request-&gt;query('search');
+
+        $query = Procurement::with('item', 'supplier');
+
+        if ($search) {
+            $query-&gt;where(function ($q) use ($search) {
+                $q-&gt;where('procurement_code', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhereHas('item', fn ($iq) =&gt; $iq-&gt;where('item_name', 'like', &quot;%{$search}%&quot;))
+                    -&gt;orWhereHas('supplier', fn ($sq) =&gt; $sq-&gt;where('supplier_name', 'like', &quot;%{$search}%&quot;));
+            });
+        }
+
+        $procurements = $query
+            -&gt;orderByDesc('procurement_date')
+            -&gt;paginate(10)
+            -&gt;through(fn (Procurement $p) =&gt; [
+                'id' =&gt; $p-&gt;id,
+                'procurementCode' =&gt; $p-&gt;procurement_code,
+                'itemName' =&gt; $p-&gt;item?-&gt;item_name ?? '-',
+                'supplierName' =&gt; $p-&gt;supplier?-&gt;supplier_name ?? '-',
+                'quantity' =&gt; $p-&gt;quantity,
+                'unitPrice' =&gt; (int) $p-&gt;unit_price,
+                'totalPrice' =&gt; (int) $p-&gt;total_price,
+                'procurementDate' =&gt; $p-&gt;procurement_date?-&gt;toDateString(),
+            ]);
+
+        $stats = [
+            'total' =&gt; Procurement::count(),
+            'totalQuantity' =&gt; Procurement::sum('quantity'),
+            'totalSpending' =&gt; (int) Procurement::sum('total_price'),
+        ];
+
+        $items = InventoryItem::orderBy('item_name')
+            -&gt;get()
+            -&gt;map(fn (InventoryItem $i) =&gt; [
+                'id' =&gt; $i-&gt;id,
+                'itemName' =&gt; $i-&gt;item_name,
+            ]);
+
+        $suppliers = Supplier::orderBy('supplier_name')
+            -&gt;get()
+            -&gt;map(fn (Supplier $s) =&gt; [
+                'id' =&gt; $s-&gt;id,
+                'supplierName' =&gt; $s-&gt;supplier_name,
+            ]);
+
+        return Inertia::render('admin/Procurement', [
+            'procurements' =&gt; $procurements,
+            'stats' =&gt; $stats,
+            'items' =&gt; $items,
+            'suppliers' =&gt; $suppliers,
+        ]);
+    }
+
+    public function store(StoreProcurementRequest $request): RedirectResponse
+    {
+        $unitPrice = (int) $request-&gt;input('unitPrice');
+        $quantity = (int) $request-&gt;input('quantity');
+        $totalPrice = $unitPrice * $quantity;
+
+        $procurement = Procurement::create([
+            'procurement_code' =&gt; $request-&gt;input('procurementCode'),
+            'item_id' =&gt; $request-&gt;input('itemId'),
+            'supplier_id' =&gt; $request-&gt;input('supplierId'),
+            'quantity' =&gt; $quantity,
+            'unit_price' =&gt; $unitPrice,
+            'total_price' =&gt; $totalPrice,
+            'procurement_date' =&gt; $request-&gt;input('procurementDate'),
+            'notes' =&gt; $request-&gt;input('notes'),
+        ]);
+
+        $itemName = $procurement-&gt;item?-&gt;item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Tambah Pengadaan: '.$itemName,
+            description: 'Menambahkan pengadaan &quot;'.$itemName.'&quot; ('.$procurement-&gt;procurement_code.') sebanyak '.$quantity.' unit',
+            inventoryItemId: $procurement-&gt;item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.procurement')-&gt;with('success', 'Data pengadaan berhasil disimpan!');
+    }
+
+    public function show(Procurement $procurement): JsonResponse
+    {
+        $procurement-&gt;load('item', 'supplier');
+
+        return response()-&gt;json([
+            'id' =&gt; $procurement-&gt;id,
+            'procurementCode' =&gt; $procurement-&gt;procurement_code,
+            'itemId' =&gt; $procurement-&gt;item_id,
+            'itemName' =&gt; $procurement-&gt;item?-&gt;item_name ?? '-',
+            'supplierId' =&gt; $procurement-&gt;supplier_id,
+            'supplierName' =&gt; $procurement-&gt;supplier?-&gt;supplier_name ?? '-',
+            'quantity' =&gt; $procurement-&gt;quantity,
+            'unitPrice' =&gt; (int) $procurement-&gt;unit_price,
+            'totalPrice' =&gt; (int) $procurement-&gt;total_price,
+            'procurementDate' =&gt; $procurement-&gt;procurement_date?-&gt;toDateString(),
+            'notes' =&gt; $procurement-&gt;notes,
+        ]);
+    }
+
+    public function update(StoreProcurementRequest $request, Procurement $procurement): RedirectResponse
+    {
+        $unitPrice = (int) $request-&gt;input('unitPrice');
+        $quantity = (int) $request-&gt;input('quantity');
+        $totalPrice = $unitPrice * $quantity;
+
+        $procurement-&gt;update([
+            'procurement_code' =&gt; $request-&gt;input('procurementCode'),
+            'item_id' =&gt; $request-&gt;input('itemId'),
+            'supplier_id' =&gt; $request-&gt;input('supplierId'),
+            'quantity' =&gt; $quantity,
+            'unit_price' =&gt; $unitPrice,
+            'total_price' =&gt; $totalPrice,
+            'procurement_date' =&gt; $request-&gt;input('procurementDate'),
+            'notes' =&gt; $request-&gt;input('notes'),
+        ]);
+
+        $itemName = $procurement-&gt;item?-&gt;item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'pengadaan',
+            activityName: 'Update Pengadaan: '.$itemName,
+            description: 'Memperbarui data pengadaan &quot;'.$itemName.'&quot; ('.$procurement-&gt;procurement_code.')',
+            inventoryItemId: $procurement-&gt;item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.procurement')-&gt;with('success', 'Data pengadaan berhasil diperbarui!');
+    }
+
+    public function destroy(Procurement $procurement): RedirectResponse
+    {
+        $itemName = $procurement-&gt;item?-&gt;item_name ?? 'Unknown';
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pengadaan: '.$itemName,
+            description: 'Menghapus data pengadaan &quot;'.$itemName.'&quot; ('.$procurement-&gt;procurement_code.')',
+            inventoryItemId: $procurement-&gt;item_id,
+            referenceTable: 'procurements',
+            referenceId: $procurement-&gt;id,
+        );
+
+        $procurement-&gt;delete();
+
+        return redirect()-&gt;route('admin.procurement')-&gt;with('success', 'Data pengadaan berhasil dihapus!');
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/admin/Procurement.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/admin/Procurement.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">function ProcurementPage({
+    procurements,
+    stats,
+    items,
+    suppliers,
+}: {
+    procurements: PaginatedData&lt;ProcurementItem&gt;;
+    stats: Stats;
+    items: ItemOption[];
+    suppliers: SupplierOption[];
+}) {
+    const [selectedProcurement, setSelectedProcurement] = useState&lt;ProcurementItem | null&gt;(null);
+    const [editData, setEditData] = useState&lt;DetailResponse | null&gt;(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [detailData, setDetailData] = useState&lt;DetailResponse | null&gt;(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const openDetail = async (item: ProcurementItem) =&gt; {
+        setSelectedProcurement(item);
+        setDetailLoading(true);
+        setDetailData(null);
+
+        document.getElementById(&quot;detail-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ procurement: item.id }));
+            const data: DetailResponse = await res.json();
+            setDetailData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat detail pengadaan&quot;);
+        }
+
+        setDetailLoading(false);
+    };
+
+    const openEdit = async (item: ProcurementItem) =&gt; {
+        setEditData(null);
+        setEditLoading(true);
+
+        document.getElementById(&quot;edit-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ procurement: item.id }));
+            const data: DetailResponse = await res.json();
+            setEditData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat data pengadaan&quot;);
+        }
+
+        setEditLoading(false);
+    };
+
+    const confirmDelete = (item: ProcurementItem) =&gt; {
+        setSelectedProcurement(item);
+        document.getElementById(&quot;delete-modal&quot;)?.showModal();
+    };
+
+    const handleDelete = () =&gt; {
+        if (!selectedProcurement) return;
+
+        setDeleteLoading(true);
+
+        router.delete(destroy.url({ procurement: selectedProcurement.id }), {
+            preserveScroll: true,
+            onSuccess: () =&gt; {
+                toast.success(&quot;Data pengadaan berhasil dihapus!&quot;);
+                document.getElementById(&quot;delete-modal&quot;)?.close();
+                setSelectedProcurement(null);
+            },
+            onError: () =&gt; {
+                toast.error(&quot;Gagal menghapus data pengadaan&quot;);
+            },
+            onFinish: () =&gt; setDeleteLoading(false),
+        });
+    };
+
+    const closeForm = () =&gt; {
+        document.getElementById(&quot;procurement-modal&quot;)?.close();
+    };
+
+    const closeEditForm = () =&gt; {
+        setEditData(null);
+        document.getElementById(&quot;edit-modal&quot;)?.close();
+    };
+
+    const statCards = [
+        { title: &quot;Total Pengadaan&quot;, value: String(stats.total), subtitle: &quot;Seluruh transaksi&quot; },
+        { title: &quot;Total Barang&quot;, value: String(stats.totalQuantity), subtitle: &quot;Jumlah barang&quot; },
+        { title: &quot;Total Pengeluaran&quot;, value: `Rp ${stats.totalSpending.toLocaleString(&quot;id-ID&quot;)}`, subtitle: &quot;Seluruh pengeluaran&quot; },
+    ];
+
+    // ... (JSX markup dibuang)
+}
+
+ProcurementPage.layout = (page: React.ReactNode) =&gt; &lt;ProcurementLayout&gt;{page}&lt;/ProcurementLayout&gt;;
+
+export default ProcurementPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="10-pemasok.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="12-riwayat-aktivitas.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>

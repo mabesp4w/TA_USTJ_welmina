@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03. Data Member — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>03. Data Member</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/MemberController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/MemberController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class MemberController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = $request-&gt;query('search');
+        $status = $request-&gt;query('status');
+
+        $query = Member::with('memberships.package');
+
+        if ($search) {
+            $query-&gt;where(function ($q) use ($search) {
+                $q-&gt;where('full_name', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('member_code', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('identity_no', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('phone', 'like', &quot;%{$search}%&quot;);
+            });
+        }
+
+        if ($status === 'Aktif') {
+            $query-&gt;where('member_status', 'active');
+        } elseif ($status === 'Nonaktif') {
+            $query-&gt;where('member_status', 'inactive');
+        }
+
+        $members = $query
+            -&gt;latest()
+            -&gt;paginate(10)
+            -&gt;through(fn (Member $member) =&gt; [
+                'id' =&gt; $member-&gt;id,
+                'memberCode' =&gt; $member-&gt;member_code,
+                'name' =&gt; $member-&gt;full_name,
+                'plan' =&gt; $member-&gt;memberships-&gt;last()?-&gt;package?-&gt;package_name ?? '-',
+                'period' =&gt; $member-&gt;memberships-&gt;last()
+                    ? sprintf(
+                        'Bergabung %s - Exp %s',
+                        $member-&gt;memberships-&gt;last()-&gt;start_date-&gt;format('d M Y'),
+                        $member-&gt;memberships-&gt;last()-&gt;end_date-&gt;format('d M Y'),
+                    )
+                    : '-',
+                'status' =&gt; $member-&gt;member_status === 'active' ? 'Aktif' : 'Nonaktif',
+            ]);
+
+        $total = Member::count();
+        $active = Member::where('member_status', 'active')-&gt;count();
+        $expiring = MemberMembership::where('status', 'active')
+            -&gt;whereBetween('end_date', [now(), now()-&gt;addDays(7)])
+            -&gt;count();
+        $inactive = Member::where('member_status', 'inactive')-&gt;count();
+
+        return Inertia::render('admin/Member', [
+            'stats' =&gt; [
+                ['title' =&gt; 'Total Member', 'value' =&gt; (string) $total, 'subtitle' =&gt; 'Terdaftar di sistem'],
+                ['title' =&gt; 'Aktif', 'value' =&gt; (string) $active, 'subtitle' =&gt; 'Masa berlaku aktif'],
+                ['title' =&gt; 'Aktif Expired', 'value' =&gt; (string) $expiring, 'subtitle' =&gt; 'Dalam 7 hari ke depan'],
+                ['title' =&gt; 'Nonaktif', 'value' =&gt; (string) $inactive, 'subtitle' =&gt; 'Masa berlaku habis'],
+            ],
+            'members' =&gt; $members,
+        ]);
+    }
+
+    public function store(StoreMemberRequest $request): RedirectResponse
+    {
+        $birthDate = $request-&gt;date('birthDate');
+
+        $member = Member::create([
+            'member_code' =&gt; $this-&gt;generateMemberCode(),
+            'full_name' =&gt; $request-&gt;input('fullName'),
+            'identity_no' =&gt; $request-&gt;input('identityNo'),
+            'phone' =&gt; $request-&gt;input('phone'),
+            'birth_date' =&gt; $birthDate?-&gt;toDateString(),
+            'gender' =&gt; $request-&gt;input('gender'),
+            'email' =&gt; $request-&gt;input('email'),
+            'address' =&gt; $request-&gt;input('address'),
+            'member_status' =&gt; 'inactive',
+            'joined_at' =&gt; now(),
+            'created_by' =&gt; $request-&gt;user()?-&gt;id,
+        ]);
+
+        ActivityLogService::log(
+            activityType: 'pendaftaran',
+            activityName: 'Tambah Member: '.$member-&gt;full_name,
+            description: 'Menambahkan member baru &quot;'.$member-&gt;full_name.'&quot; ('.$member-&gt;member_code.')',
+            memberId: $member-&gt;id,
+            referenceTable: 'members',
+            referenceId: $member-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.member')-&gt;with('success', 'Data member berhasil disimpan!');
+    }
+
+    public function show(Member $member): JsonResponse
+    {
+        $member-&gt;load('memberships.package', 'creator');
+
+        return response()-&gt;json([
+            'member' =&gt; [
+                'id' =&gt; $member-&gt;id,
+                'memberCode' =&gt; $member-&gt;member_code,
+                'fullName' =&gt; $member-&gt;full_name,
+                'identityNo' =&gt; $member-&gt;identity_no,
+                'phone' =&gt; $member-&gt;phone,
+                'birthDate' =&gt; $member-&gt;birth_date?-&gt;format('Y-m-d'),
+                'gender' =&gt; $member-&gt;gender,
+                'email' =&gt; $member-&gt;email,
+                'address' =&gt; $member-&gt;address,
+                'memberStatus' =&gt; $member-&gt;member_status,
+                'joinedAt' =&gt; $member-&gt;joined_at-&gt;format('d M Y'),
+                'createdBy' =&gt; $member-&gt;creator?-&gt;full_name,
+            ],
+            'membership' =&gt; $member-&gt;memberships-&gt;last() ? [
+                'packageName' =&gt; $member-&gt;memberships-&gt;last()-&gt;package?-&gt;package_name,
+                'durationMonths' =&gt; $member-&gt;memberships-&gt;last()-&gt;duration_months,
+                'startDate' =&gt; $member-&gt;memberships-&gt;last()-&gt;start_date-&gt;format('d M Y'),
+                'endDate' =&gt; $member-&gt;memberships-&gt;last()-&gt;end_date-&gt;format('d M Y'),
+                'status' =&gt; $member-&gt;memberships-&gt;last()-&gt;status,
+            ] : null,
+        ]);
+    }
+
+    public function update(UpdateMemberRequest $request, Member $member): RedirectResponse
+    {
+        $birthDate = $request-&gt;date('birthDate');
+
+        $member-&gt;update([
+            'full_name' =&gt; $request-&gt;input('fullName'),
+            'identity_no' =&gt; $request-&gt;input('identityNo'),
+            'phone' =&gt; $request-&gt;input('phone'),
+            'birth_date' =&gt; $birthDate?-&gt;toDateString(),
+            'gender' =&gt; $request-&gt;input('gender'),
+            'email' =&gt; $request-&gt;input('email'),
+            'address' =&gt; $request-&gt;input('address'),
+            'member_status' =&gt; $request-&gt;input('memberStatus', $member-&gt;member_status),
+        ]);
+
+        ActivityLogService::log(
+            activityType: 'pendaftaran',
+            activityName: 'Update Member: '.$member-&gt;full_name,
+            description: 'Memperbarui data member &quot;'.$member-&gt;full_name.'&quot; ('.$member-&gt;member_code.')',
+            memberId: $member-&gt;id,
+            referenceTable: 'members',
+            referenceId: $member-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.member')-&gt;with('success', 'Data member berhasil diperbarui!');
+    }
+
+    public function destroy(Member $member): RedirectResponse
+    {
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Member: '.$member-&gt;full_name,
+            description: 'Menghapus member &quot;'.$member-&gt;full_name.'&quot; ('.$member-&gt;member_code.')',
+            memberId: $member-&gt;id,
+            referenceTable: 'members',
+            referenceId: $member-&gt;id,
+        );
+
+        $member-&gt;delete();
+
+        return redirect()-&gt;route('admin.member')-&gt;with('success', 'Data member berhasil dihapus!');
+    }
+
+    protected function generateMemberCode(): string
+    {
+        $prefix = 'MB-';
+        $last = Member::where('member_code', 'like', &quot;$prefix%&quot;)
+            -&gt;orderBy('id', 'desc')
+            -&gt;value('member_code');
+
+        if (! $last) {
+            return $prefix.'0001';
+        }
+
+        $num = (int) substr($last, 3) + 1;
+
+        return $prefix.str_pad((string) $num, 4, '0', STR_PAD_LEFT);
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/admin/Member.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/admin/Member.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">type DetailResponse = {
+    member: {
+        id: number;
+        memberCode: string;
+        fullName: string;
+        identityNo: string | null;
+        phone: string | null;
+        birthDate: string | null;
+        gender: string | null;
+        email: string | null;
+        address: string | null;
+        memberStatus: string;
+        joinedAt: string;
+        createdBy: string | null;
+    };
+    membership: {
+        packageName: string;
+        durationMonths: number;
+        startDate: string;
+        endDate: string;
+        status: string;
+    } | null;
+};
+
+type EditMemberData = {
+    id: number;
+    fullName: string;
+    identityNo: string | null;
+    phone: string | null;
+    birthDate: string | null;
+    gender: string | null;
+    email: string | null;
+    address: string | null;
+    memberStatus: string;
+};
+
+function MemberPage({ stats, members }: { stats: Stat[]; members: PaginatedData&lt;MemberItem&gt; }) {
+    const [statusFilter, setStatusFilter] = useState&lt;string | null&gt;(null);
+    const [selectedMember, setSelectedMember] = useState&lt;MemberItem | null&gt;(null);
+    const [editData, setEditData] = useState&lt;EditMemberData | null&gt;(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [detailData, setDetailData] = useState&lt;DetailResponse | null&gt;(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const filteredMembers = statusFilter
+        ? members.data.filter((m) =&gt; m.status === statusFilter)
+        : members.data;
+
+    const handleFilterChange = (filter: string | null) =&gt; {
+        setStatusFilter(filter);
+    };
+
+    const openDetail = async (member: MemberItem) =&gt; {
+        setSelectedMember(member);
+        setDetailLoading(true);
+        setDetailData(null);
+
+        document.getElementById(&quot;detail-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ member: member.id }));
+            const data: DetailResponse = await res.json();
+            setDetailData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat detail member&quot;);
+        }
+
+        setDetailLoading(false);
+    };
+
+    const openEdit = async (member: MemberItem) =&gt; {
+        setEditData(null);
+        setEditLoading(true);
+
+        document.getElementById(&quot;edit-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ member: member.id }));
+            const data: DetailResponse = await res.json();
+            setEditData(data.member);
+        } catch {
+            toast.error(&quot;Gagal memuat data member&quot;);
+        }
+
+        setEditLoading(false);
+    };
+
+    const confirmDelete = (member: MemberItem) =&gt; {
+        setSelectedMember(member);
+        document.getElementById(&quot;delete-modal&quot;)?.showModal();
+    };
+
+    const handleDelete = () =&gt; {
+        if (!selectedMember) return;
+
+        setDeleteLoading(true);
+
+        router.delete(destroy.url({ member: selectedMember.id }), {
+            preserveScroll: true,
+            onSuccess: () =&gt; {
+                toast.success(&quot;Data member berhasil dihapus!&quot;);
+                document.getElementById(&quot;delete-modal&quot;)?.close();
+                setSelectedMember(null);
+            },
+            onError: () =&gt; {
+                toast.error(&quot;Gagal menghapus data member&quot;);
+            },
+            onFinish: () =&gt; setDeleteLoading(false),
+        });
+    };
+
+    const closeForm = () =&gt; {
+        document.getElementById(&quot;member-modal&quot;)?.close();
+    };
+
+    const closeEditForm = () =&gt; {
+        setEditData(null);
+        document.getElementById(&quot;edit-modal&quot;)?.close();
+    };
+
+    // ... (JSX markup dibuang)
+}
+
+MemberPage.layout = (page: React.ReactNode) =&gt; &lt;MemberLayout&gt;{page}&lt;/MemberLayout&gt;;
+
+export default MemberPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="02-dashboard-administrator.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="04-biaya-pendaftaran.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>

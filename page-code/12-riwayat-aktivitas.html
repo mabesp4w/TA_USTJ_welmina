@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12. Riwayat Aktivitas — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>12. Riwayat Aktivitas</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/ActivityLogController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/ActivityLogController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class ActivityLogController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = $request-&gt;query('search');
+        $type = $request-&gt;query('type');
+
+        $query = ActivityLog::with('user');
+
+        if ($search) {
+            $query-&gt;where(function ($q) use ($search) {
+                $q-&gt;where('activity_name', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('description', 'like', &quot;%{$search}%&quot;);
+            });
+        }
+
+        if ($type) {
+            $query-&gt;where('activity_type', $type);
+        }
+
+        $logs = $query
+            -&gt;orderByDesc('activity_time')
+            -&gt;paginate(10)
+            -&gt;through(fn (ActivityLog $l) =&gt; [
+                'id' =&gt; $l-&gt;id,
+                'activityTime' =&gt; $l-&gt;activity_time?-&gt;format('Y-m-d H:i:s'),
+                'activityName' =&gt; $l-&gt;activity_name,
+                'activityType' =&gt; $l-&gt;activity_type,
+                'description' =&gt; $l-&gt;description,
+                'userName' =&gt; $l-&gt;user?-&gt;name ?? 'Sistem',
+            ]);
+
+        $stats = [
+            'total' =&gt; ActivityLog::count(),
+            'today' =&gt; ActivityLog::whereDate('activity_time', today())-&gt;count(),
+            'types' =&gt; ActivityLog::selectRaw('activity_type, count(*) as total')
+                -&gt;groupBy('activity_type')
+                -&gt;orderByDesc('total')
+                -&gt;pluck('total', 'activity_type'),
+        ];
+
+        return Inertia::render('admin/ActivityLog', [
+            'logs' =&gt; $logs,
+            'stats' =&gt; $stats,
+        ]);
+    }
+
+    public function show(ActivityLog $activityLog): JsonResponse
+    {
+        $activityLog-&gt;load('user');
+
+        return response()-&gt;json([
+            'id' =&gt; $activityLog-&gt;id,
+            'activityTime' =&gt; $activityLog-&gt;activity_time?-&gt;format('Y-m-d H:i:s'),
+            'activityName' =&gt; $activityLog-&gt;activity_name,
+            'activityType' =&gt; $activityLog-&gt;activity_type,
+            'description' =&gt; $activityLog-&gt;description,
+            'userName' =&gt; $activityLog-&gt;user?-&gt;name ?? 'Sistem',
+            'referenceTable' =&gt; $activityLog-&gt;reference_table,
+            'referenceId' =&gt; $activityLog-&gt;reference_id,
+        ]);
+    }
+
+    public function destroy(ActivityLog $activityLog): RedirectResponse
+    {
+        $activityLog-&gt;delete();
+
+        return redirect()-&gt;route('admin.activity-log')-&gt;with('success', 'Log berhasil dihapus!');
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/admin/ActivityLog.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/admin/ActivityLog.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">function ActivityLogPage({
+    logs,
+    stats,
+}: {
+    logs: PaginatedData&lt;ActivityLogItem&gt;;
+    stats: Stats;
+}) {
+    const [selectedLog, setSelectedLog] = useState&lt;ActivityLogItem | null&gt;(null);
+    const [detailData, setDetailData] = useState&lt;DetailResponse | null&gt;(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const openDetail = async (item: ActivityLogItem) =&gt; {
+        setSelectedLog(item);
+        setDetailLoading(true);
+        setDetailData(null);
+
+        document.getElementById(&quot;detail-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ activityLog: item.id }));
+            const data: DetailResponse = await res.json();
+            setDetailData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat detail aktivitas&quot;);
+        }
+
+        setDetailLoading(false);
+    };
+
+    const confirmDelete = (item: ActivityLogItem) =&gt; {
+        setSelectedLog(item);
+        document.getElementById(&quot;delete-modal&quot;)?.showModal();
+    };
+
+    const handleDelete = () =&gt; {
+        if (!selectedLog) return;
+
+        setDeleteLoading(true);
+
+        router.delete(destroy.url({ activityLog: selectedLog.id }), {
+            preserveScroll: true,
+            onSuccess: () =&gt; {
+                toast.success(&quot;Log berhasil dihapus!&quot;);
+                document.getElementById(&quot;delete-modal&quot;)?.close();
+                setSelectedLog(null);
+            },
+            onError: () =&gt; {
+                toast.error(&quot;Gagal menghapus log&quot;);
+            },
+            onFinish: () =&gt; setDeleteLoading(false),
+        });
+    };
+
+    const typeNames: Record&lt;string, string&gt; = {
+        tambah: &quot;Tambah&quot;,
+        servis: &quot;Servis&quot;,
+        pinjam: &quot;Pinjam&quot;,
+        kembali: &quot;Kembali&quot;,
+        rusak: &quot;Rusak&quot;,
+        pengadaan: &quot;Pengadaan&quot;,
+        pembayaran: &quot;Pembayaran&quot;,
+        pendaftaran: &quot;Pendaftaran&quot;,
+        lainnya: &quot;Lainnya&quot;,
+    };
+
+    const statCards = [
+        { title: &quot;Total Aktivitas&quot;, value: String(stats.total), subtitle: &quot;Seluruh aktivitas&quot; },
+        { title: &quot;Hari Ini&quot;, value: String(stats.today), subtitle: &quot;Aktivitas hari ini&quot; },
+        { title: &quot;Tipe Terbanyak&quot;, value: Object.keys(stats.types)[0] ? (typeNames[Object.keys(stats.types)[0]] ?? Object.keys(stats.types)[0]) : &quot;-&quot;, subtitle: &quot;Aktivitas paling sering&quot; },
+    ];
+
+    // ... (JSX markup dibuang)
+}
+
+ActivityLogPage.layout = (page: React.ReactNode) =&gt; &lt;ActivityLogLayout&gt;{page}&lt;/ActivityLogLayout&gt;;
+
+export default ActivityLogPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="11-pengadaan-barang.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="13-laporan.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>

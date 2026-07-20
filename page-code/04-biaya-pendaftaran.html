@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04. Biaya Pendaftaran — Kode Sumber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .code-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 2rem; overflow: hidden; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+        .code-header h3 { font-size: 0.85rem; color: #475569; }
+        .code-header .filepath { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        .copy-btn { background: #3b82f6; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #2563eb; }
+        .copy-btn.copied { background: #10b981; }
+        pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .nav-btn { color: #3b82f6; text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 4px; transition: all 0.2s; }
+        .nav-btn:hover { background: #3b82f6; color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Kembali ke Daftar Isi</a>
+    <h1>04. Biaya Pendaftaran</h1>
+    <p class="subtitle">Kode sumber Controller (PHP) dan Halaman (React TSX)</p>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Controller (PHP)</h3>
+                <span class="filepath">app/Http/Controllers/Admin/RegistrationPaymentController.php</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'ctrl-code', 'Controller (PHP)', 'app/Http/Controllers/Admin/RegistrationPaymentController.php')">Copy</button>
+        </div>
+        <pre><code id="ctrl-code" class="language-php">class RegistrationPaymentController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = $request-&gt;query('search');
+        $status = $request-&gt;query('status');
+        $packageId = $request-&gt;query('package');
+
+        $query = RegistrationPayment::with('member', 'package', 'creator');
+
+        if ($search) {
+            $query-&gt;whereHas('member', function ($q) use ($search) {
+                $q-&gt;where('full_name', 'like', &quot;%{$search}%&quot;)
+                    -&gt;orWhere('member_code', 'like', &quot;%{$search}%&quot;);
+            });
+        }
+
+        if ($status) {
+            $query-&gt;where('payment_status', $status);
+        }
+
+        if ($packageId) {
+            $query-&gt;where('package_id', $packageId);
+        }
+
+        $payments = $query
+            -&gt;latest()
+            -&gt;paginate(10)
+            -&gt;through(function (RegistrationPayment $rp) {
+                $ms = MemberMembership::where('member_id', $rp-&gt;member_id)
+                    -&gt;where('package_id', $rp-&gt;package_id)
+                    -&gt;latest()
+                    -&gt;first();
+
+                return [
+                    'id' =&gt; $rp-&gt;id,
+                    'memberCode' =&gt; $rp-&gt;member?-&gt;member_code ?? '-',
+                    'memberName' =&gt; $rp-&gt;member?-&gt;full_name ?? '-',
+                    'packageName' =&gt; $rp-&gt;package?-&gt;package_name ?? '-',
+                    'durationMonths' =&gt; $ms?-&gt;duration_months ?? 0,
+                    'startDate' =&gt; $ms?-&gt;start_date?-&gt;format('d M Y') ?? '-',
+                    'endDate' =&gt; $ms?-&gt;end_date?-&gt;format('d M Y') ?? '-',
+                    'registrationDate' =&gt; $rp-&gt;registration_date-&gt;format('d M Y'),
+                    'registrationFee' =&gt; (int) $rp-&gt;registration_fee,
+                    'amount' =&gt; (int) ($ms?-&gt;amount ?? 0),
+                    'adminFee' =&gt; (int) $rp-&gt;admin_fee,
+                    'totalFee' =&gt; (int) $rp-&gt;registration_fee + (int) ($ms?-&gt;amount ?? 0) + (int) $rp-&gt;admin_fee,
+                    'paymentMethod' =&gt; $rp-&gt;payment_method,
+                    'paymentStatus' =&gt; $rp-&gt;payment_status,
+                    'createdBy' =&gt; $rp-&gt;creator?-&gt;full_name ?? 'Sistem',
+                ];
+            });
+
+        $revenue = (int) RegistrationPayment::where('payment_status', 'paid')
+            -&gt;sum(DB::raw('registration_fee + admin_fee'));
+
+        $newThisMonth = RegistrationPayment::whereYear('registration_date', now()-&gt;year)
+            -&gt;whereMonth('registration_date', now()-&gt;month)
+            -&gt;count();
+
+        $topPackage = RegistrationPayment::selectRaw('package_id, count(*) as total')
+            -&gt;groupBy('package_id')
+            -&gt;orderByDesc('total')
+            -&gt;with('package:id,package_name')
+            -&gt;first();
+
+        $stats = [
+            'revenue' =&gt; $revenue,
+            'newThisMonth' =&gt; $newThisMonth,
+            'topPackageName' =&gt; $topPackage?-&gt;package?-&gt;package_name ?? '-',
+            'topPackageCount' =&gt; (int) ($topPackage?-&gt;total ?? 0),
+        ];
+
+        $members = Member::orderBy('full_name')
+            -&gt;get()
+            -&gt;map(fn (Member $m) =&gt; [
+                'id' =&gt; $m-&gt;id,
+                'memberCode' =&gt; $m-&gt;member_code,
+                'fullName' =&gt; $m-&gt;full_name,
+            ]);
+
+        $packages = MembershipPackage::with('prices')
+            -&gt;where('is_active', true)
+            -&gt;orderBy('package_name')
+            -&gt;get()
+            -&gt;map(fn (MembershipPackage $p) =&gt; [
+                'id' =&gt; $p-&gt;id,
+                'packageName' =&gt; $p-&gt;package_name,
+                'registrationFee' =&gt; (int) $p-&gt;registration_fee,
+                'prices' =&gt; $p-&gt;prices-&gt;map(fn (MembershipPackagePrice $pr) =&gt; [
+                    'durationMonths' =&gt; $pr-&gt;duration_months,
+                    'price' =&gt; (int) $pr-&gt;price,
+                ]),
+            ]);
+
+        return Inertia::render('admin/RegistrationPayment', [
+            'payments' =&gt; $payments,
+            'stats' =&gt; $stats,
+            'members' =&gt; $members,
+            'packages' =&gt; $packages,
+        ]);
+    }
+
+    public function store(StoreRegistrationPaymentRequest $request): RedirectResponse
+    {
+        $startDate = $request-&gt;date('startDate');
+        $durationMonths = (int) $request-&gt;input('durationMonths');
+        $endDate = $startDate-&gt;copy()-&gt;addMonths($durationMonths);
+        $memberId = (int) $request-&gt;input('memberId');
+
+        RegistrationPayment::create([
+            'member_id' =&gt; $memberId,
+            'package_id' =&gt; $request-&gt;input('packageId'),
+            'registration_date' =&gt; $request-&gt;date('registrationDate')-&gt;toDateString(),
+            'registration_fee' =&gt; $request-&gt;input('registrationFee'),
+            'admin_fee' =&gt; $request-&gt;input('adminFee', 0),
+            'payment_method' =&gt; $request-&gt;input('paymentMethod'),
+            'payment_status' =&gt; $request-&gt;input('paymentStatus', 'unpaid'),
+            'notes' =&gt; $request-&gt;input('notes'),
+            'created_by' =&gt; $request-&gt;user()?-&gt;id,
+        ]);
+
+        $paidAt = $request-&gt;input('paymentStatus') === 'paid' ? now() : null;
+
+        MemberMembership::create([
+            'member_id' =&gt; $memberId,
+            'package_id' =&gt; $request-&gt;input('packageId'),
+            'duration_months' =&gt; $durationMonths,
+            'start_date' =&gt; $startDate-&gt;toDateString(),
+            'end_date' =&gt; $endDate-&gt;toDateString(),
+            'amount' =&gt; $request-&gt;input('amount', 0),
+            'admin_fee' =&gt; $request-&gt;input('adminFee', 0),
+            'payment_method' =&gt; $request-&gt;input('paymentMethod'),
+            'payment_status' =&gt; $request-&gt;input('paymentStatus', 'unpaid'),
+            'paid_at' =&gt; $paidAt,
+            'status' =&gt; 'active',
+            'notes' =&gt; $request-&gt;input('notes'),
+            'created_by' =&gt; $request-&gt;user()?-&gt;id,
+        ]);
+
+        Member::where('id', $memberId)-&gt;update(['member_status' =&gt; 'active']);
+
+        $member = Member::find($memberId);
+
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Tambah Pembayaran: '.($member?-&gt;full_name ?? 'Unknown'),
+            description: 'Menambahkan pembayaran pendaftaran member &quot;'.($member?-&gt;full_name ?? 'Unknown').'&quot; ('.$member?-&gt;member_code.')',
+            memberId: $memberId,
+            referenceTable: 'registration_payments',
+            referenceId: $memberId,
+        );
+
+        return redirect()-&gt;route('admin.registration-payment')-&gt;with('success', 'Data biaya pendaftaran berhasil disimpan!');
+    }
+
+    public function show(RegistrationPayment $registrationPayment): JsonResponse
+    {
+        $registrationPayment-&gt;load('member', 'package', 'creator');
+
+        $ms = MemberMembership::where('member_id', $registrationPayment-&gt;member_id)
+            -&gt;where('package_id', $registrationPayment-&gt;package_id)
+            -&gt;latest()
+            -&gt;first();
+
+        return response()-&gt;json([
+            'id' =&gt; $registrationPayment-&gt;id,
+            'memberId' =&gt; $registrationPayment-&gt;member_id,
+            'memberCode' =&gt; $registrationPayment-&gt;member?-&gt;member_code ?? '-',
+            'memberName' =&gt; $registrationPayment-&gt;member?-&gt;full_name ?? '-',
+            'packageId' =&gt; $registrationPayment-&gt;package_id,
+            'packageName' =&gt; $registrationPayment-&gt;package?-&gt;package_name ?? '-',
+            'durationMonths' =&gt; $ms?-&gt;duration_months ?? 0,
+            'startDate' =&gt; $ms?-&gt;start_date?-&gt;toDateString() ?? $registrationPayment-&gt;registration_date-&gt;toDateString(),
+            'endDate' =&gt; $ms?-&gt;end_date?-&gt;format('d M Y') ?? '-',
+            'registrationDate' =&gt; $registrationPayment-&gt;registration_date-&gt;toDateString(),
+            'registrationFee' =&gt; (int) $registrationPayment-&gt;registration_fee,
+            'amount' =&gt; (int) ($ms?-&gt;amount ?? 0),
+            'adminFee' =&gt; (int) $registrationPayment-&gt;admin_fee,
+            'totalFee' =&gt; (int) $registrationPayment-&gt;registration_fee + (int) ($ms?-&gt;amount ?? 0) + (int) $registrationPayment-&gt;admin_fee,
+            'paymentMethod' =&gt; $registrationPayment-&gt;payment_method,
+            'paymentStatus' =&gt; $registrationPayment-&gt;payment_status,
+            'paidAt' =&gt; $ms?-&gt;paid_at?-&gt;format('Y-m-d H:i'),
+            'notes' =&gt; $registrationPayment-&gt;notes,
+            'createdBy' =&gt; $registrationPayment-&gt;creator?-&gt;full_name ?? 'Sistem',
+            'createdAt' =&gt; $registrationPayment-&gt;created_at-&gt;format('d M Y H:i'),
+        ]);
+    }
+
+    public function update(StoreRegistrationPaymentRequest $request, RegistrationPayment $registrationPayment): RedirectResponse
+    {
+        $startDate = $request-&gt;date('startDate');
+        $durationMonths = (int) $request-&gt;input('durationMonths');
+        $endDate = $startDate-&gt;copy()-&gt;addMonths($durationMonths);
+        $paidAt = $request-&gt;input('paymentStatus') === 'paid' ? now() : null;
+
+        $registrationPayment-&gt;update([
+            'member_id' =&gt; $request-&gt;input('memberId'),
+            'package_id' =&gt; $request-&gt;input('packageId'),
+            'registration_date' =&gt; $request-&gt;date('registrationDate')-&gt;toDateString(),
+            'registration_fee' =&gt; $request-&gt;input('registrationFee'),
+            'admin_fee' =&gt; $request-&gt;input('adminFee', 0),
+            'payment_method' =&gt; $request-&gt;input('paymentMethod'),
+            'payment_status' =&gt; $request-&gt;input('paymentStatus', 'unpaid'),
+            'notes' =&gt; $request-&gt;input('notes'),
+        ]);
+
+        $ms = MemberMembership::where('member_id', $registrationPayment-&gt;member_id)
+            -&gt;where('package_id', $registrationPayment-&gt;package_id)
+            -&gt;latest()
+            -&gt;first();
+
+        if ($ms) {
+            $ms-&gt;update([
+                'package_id' =&gt; $request-&gt;input('packageId'),
+                'duration_months' =&gt; $durationMonths,
+                'start_date' =&gt; $startDate-&gt;toDateString(),
+                'end_date' =&gt; $endDate-&gt;toDateString(),
+                'amount' =&gt; $request-&gt;input('amount', 0),
+                'admin_fee' =&gt; $request-&gt;input('adminFee', 0),
+                'payment_method' =&gt; $request-&gt;input('paymentMethod'),
+                'payment_status' =&gt; $request-&gt;input('paymentStatus', 'unpaid'),
+                'paid_at' =&gt; $paidAt,
+                'notes' =&gt; $request-&gt;input('notes'),
+            ]);
+        }
+
+        ActivityLogService::log(
+            activityType: 'pembayaran',
+            activityName: 'Update Pembayaran: '.($registrationPayment-&gt;member?-&gt;full_name ?? 'Unknown'),
+            description: 'Memperbarui data pembayaran pendaftaran member &quot;'.($registrationPayment-&gt;member?-&gt;full_name ?? 'Unknown').'&quot;',
+            memberId: $registrationPayment-&gt;member_id,
+            referenceTable: 'registration_payments',
+            referenceId: $registrationPayment-&gt;id,
+        );
+
+        return redirect()-&gt;route('admin.registration-payment')-&gt;with('success', 'Data biaya pendaftaran berhasil diperbarui!');
+    }
+
+    public function destroy(RegistrationPayment $registrationPayment): RedirectResponse
+    {
+        $memberId = $registrationPayment-&gt;member_id;
+
+        ActivityLogService::log(
+            activityType: 'lainnya',
+            activityName: 'Hapus Pembayaran: '.($registrationPayment-&gt;member?-&gt;full_name ?? 'Unknown'),
+            description: 'Menghapus data pembayaran pendaftaran member &quot;'.($registrationPayment-&gt;member?-&gt;full_name ?? 'Unknown').'&quot;',
+            memberId: $memberId,
+            referenceTable: 'registration_payments',
+            referenceId: $registrationPayment-&gt;id,
+        );
+
+        MemberMembership::where('member_id', $memberId)
+            -&gt;where('package_id', $registrationPayment-&gt;package_id)
+            -&gt;delete();
+
+        $registrationPayment-&gt;delete();
+
+        Member::where('id', $memberId)-&gt;update(['member_status' =&gt; 'inactive']);
+
+        return redirect()-&gt;route('admin.registration-payment')-&gt;with('success', 'Data biaya pendaftaran berhasil dihapus!');
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-section">
+        <div class="code-header">
+            <div>
+                <h3>Halaman (React TSX)</h3>
+                <span class="filepath">resources/js/pages/admin/RegistrationPayment.tsx</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this, 'tsx-code', 'Halaman (React TSX)', 'resources/js/pages/admin/RegistrationPayment.tsx')">Copy</button>
+        </div>
+        <pre><code id="tsx-code" class="language-tsx">function RegistrationPaymentPage({
+    payments,
+    stats,
+    members,
+    packages,
+}: {
+    payments: PaginatedData&lt;PaymentItem&gt;;
+    stats: { revenue: number; newThisMonth: number; topPackageName: string; topPackageCount: number };
+    members: MemberOption[];
+    packages: PackageOption[];
+}) {
+    const [selectedPayment, setSelectedPayment] = useState&lt;PaymentItem | null&gt;(null);
+    const [editData, setEditData] = useState&lt;EditPaymentData | null&gt;(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [detailData, setDetailData] = useState&lt;DetailResponse | null&gt;(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const openDetail = async (payment: PaymentItem) =&gt; {
+        setSelectedPayment(payment);
+        setDetailLoading(true);
+        setDetailData(null);
+
+        document.getElementById(&quot;detail-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ registrationPayment: payment.id }));
+            const data: DetailResponse = await res.json();
+            setDetailData(data);
+        } catch {
+            toast.error(&quot;Gagal memuat detail pembayaran&quot;);
+        }
+
+        setDetailLoading(false);
+    };
+
+    const openEdit = async (payment: PaymentItem) =&gt; {
+        setEditData(null);
+        setEditLoading(true);
+
+        document.getElementById(&quot;edit-modal&quot;)?.showModal();
+
+        try {
+            const res = await fetch(show.url({ registrationPayment: payment.id }));
+            const data: DetailResponse = await res.json();
+            setEditData({
+                id: data.id,
+                memberId: data.memberId,
+                packageId: data.packageId,
+                durationMonths: data.durationMonths,
+                startDate: data.startDate,
+                registrationDate: data.registrationDate,
+                registrationFee: data.registrationFee,
+                amount: data.amount,
+                adminFee: data.adminFee,
+                paymentMethod: data.paymentMethod,
+                paymentStatus: data.paymentStatus,
+                notes: data.notes,
+            });
+        } catch {
+            toast.error(&quot;Gagal memuat data pembayaran&quot;);
+        }
+
+        setEditLoading(false);
+    };
+
+    const confirmDelete = (payment: PaymentItem) =&gt; {
+        setSelectedPayment(payment);
+        document.getElementById(&quot;delete-modal&quot;)?.showModal();
+    };
+
+    const handleDelete = () =&gt; {
+        if (!selectedPayment) return;
+
+        setDeleteLoading(true);
+
+        router.delete(destroy.url({ registrationPayment: selectedPayment.id }), {
+            preserveScroll: true,
+            onSuccess: () =&gt; {
+                toast.success(&quot;Data biaya pendaftaran berhasil dihapus!&quot;);
+                document.getElementById(&quot;delete-modal&quot;)?.close();
+                setSelectedPayment(null);
+            },
+            onError: () =&gt; {
+                toast.error(&quot;Gagal menghapus data biaya pendaftaran&quot;);
+            },
+            onFinish: () =&gt; setDeleteLoading(false),
+        });
+    };
+
+    const closeForm = () =&gt; {
+        document.getElementById(&quot;payment-modal&quot;)?.close();
+    };
+
+    const closeEditForm = () =&gt; {
+        setEditData(null);
+        document.getElementById(&quot;edit-modal&quot;)?.close();
+    };
+
+    const statCards = [
+        {
+            title: &quot;Pendapatan Pendaftaran&quot;,
+            value: `Rp ${stats.revenue.toLocaleString(&quot;id-ID&quot;)}`,
+            subtitle: &quot;Total pembayaran lunas&quot;,
+        },
+        {
+            title: &quot;Pendaftaran Baru&quot;,
+            value: String(stats.newThisMonth),
+            subtitle: &quot;Bulan ini&quot;,
+        },
+        {
+            title: &quot;Paket Terpopuler&quot;,
+            value: stats.topPackageName,
+            subtitle: `${stats.topPackageCount} pendaftaran`,
+        },
+    ];
+
+    // ... (JSX markup dibuang)
+}
+
+RegistrationPaymentPage.layout = (page: React.ReactNode) =&gt; &lt;RegistrationPaymentLayout&gt;{page}&lt;/RegistrationPaymentLayout&gt;;
+
+export default RegistrationPaymentPage;</code></pre>
+    </div>
+
+    <div class="nav">
+        <a href="03-data-member.html" class="nav-btn">&larr; Sebelumnya</a>
+        <a href="05-biaya-gym.html" class="nav-btn">Berikutnya &rarr;</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+        function inlineStyles(source) {
+            const clone = source.cloneNode(true);
+            const srcNodes = source.querySelectorAll('*');
+            const cloneNodes = clone.querySelectorAll('*');
+            for (let i = 0; i < srcNodes.length; i++) {
+                const cs = window.getComputedStyle(srcNodes[i]);
+                let style = 'color:' + cs.color + ';background:transparent;';
+                if (cs.fontWeight === '700' || cs.fontWeight === 'bold') { style += 'font-weight:bold;'; }
+                if (cs.fontStyle === 'italic') { style += 'font-style:italic;'; }
+                cloneNodes[i].setAttribute('style', style);
+                cloneNodes[i].removeAttribute('class');
+            }
+            return clone.innerHTML;
+        }
+
+        function markDone(btn) {
+            btn.textContent = 'Tersalin!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+
+        function legacyCopy(btn, plain, html) {
+            // Fallback for file:// or older browsers: use a contenteditable + execCommand
+            var holder = document.createElement('div');
+            holder.setAttribute('contenteditable', 'true');
+            holder.style.position = 'fixed';
+            holder.style.left = '-9999px';
+            holder.innerHTML = html;
+            document.body.appendChild(holder);
+            var range = document.createRange();
+            range.selectNodeContents(holder);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            sel.removeAllRanges();
+            document.body.removeChild(holder);
+            if (ok) {
+                markDone(btn);
+            } else {
+                btn.textContent = 'Copy manual (Ctrl+C)';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+            }
+        }
+
+        function copyCode(btn, id, label, path) {
+            const code = document.getElementById(id);
+            const plainHeader = label + '\n' + path + '\n\n';
+            const plain = plainHeader + code.textContent;
+            const header = '<div style="font-family:Consolas,\'Courier New\',monospace;'
+                + 'background:transparent;"><span style="font-weight:bold;color:#000000;">'
+                + label + '</span><br><span style="color:#000000;">' + path + '</span></div>';
+            const body = '<div style="font-family:Consolas,\'Courier New\',monospace;font-size:12px;'
+                + 'line-height:1.5;white-space:pre-wrap;background:transparent;">'
+                + inlineStyles(code) + '</div>';
+            const html = '<div style="background:transparent;">' + header + '<br>' + body + '</div>';
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([plain], { type: 'text/plain' }),
+                    });
+                    navigator.clipboard.write([item]).then(function () { markDone(btn); }).catch(function () {
+                        legacyCopy(btn, plain, html);
+                    });
+                } catch (e) {
+                    legacyCopy(btn, plain, html);
+                }
+            } else {
+                legacyCopy(btn, plain, html);
+            }
+        }
+
+        try {
+            if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+        } catch (e) { /* highlight.js unavailable — copy still works */ }
+    </script>
+</body>
+</html>
