@@ -72,11 +72,11 @@ export const adminMenuSections: MenuSection[] = [
     {
         title: "IVENTARIS",
         items: [
-            { label: "Data Inventaris", icon: Package, href: inventory.url() },
-            { label: "Peralatan Gym", icon: Dumbbell, href: gymEquipment.url() },
             { label: "Kategori", icon: Layers, href: category.url() },
+            { label: "Supplier", icon: Building2, href: supplier.url() },
+            { label: "Data Inventaris", icon: Package, href: inventory.url() },
+            // { label: "Peralatan Gym", icon: Dumbbell, href: gymEquipment.url() },
             { label: "Perawatan Barang", icon: Wrench, href: maintenanceLogs.url() },
-            { label: "Pemasok", icon: Building2, href: supplier.url() },
         ],
     },
     {
@@ -115,10 +115,10 @@ export const pengelolaMenuSections: MenuSection[] = [
     {
         title: "IVENTARIS",
         items: [
+            { label: "Supplier", icon: Building2, href: pengelolaSupplier.url() },
             { label: "Data Inventaris", icon: Package, href: pengelolaInventory.url() },
-            { label: "Peralatan Gym", icon: Dumbbell, href: pengelolaGymEquipment.url() },
+            // { label: "Peralatan Gym", icon: Dumbbell, href: pengelolaGymEquipment.url() },
             { label: "Perawatan Barang", icon: Wrench, href: pengelolaMaintenanceLogs.url() },
-            { label: "Pemasok", icon: Building2, href: pengelolaSupplier.url() },
         ],
     },
     {
